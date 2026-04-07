@@ -291,7 +291,12 @@
       }
 
       .drum-cell {
+        display: block;
+        width: 100%;
+        height: 100%;
         min-height: 2.4rem;
+        padding: 0;
+        touch-action: manipulation;
         cursor: grab;
       }
 
@@ -538,6 +543,8 @@
         G7: "g3,b3,d4,f4",
         Cm: "c4,eb4,g4",
       };
+      const PRESET_NAME = "default";
+      const STORAGE_KEY = `skanker:preset:${PRESET_NAME}:v1`;
 
       const state = {
         bpm: 100,
@@ -920,6 +927,7 @@
             state.currentScene = state.pendingScene;
             state.pendingScene = null;
             releaseHarmony(nextNoteTime);
+            savePreset();
             renderAll();
           }
         }
@@ -952,6 +960,85 @@
       function setBpm(value) {
         state.bpm = Math.max(60, Math.min(200, Number(value) || 100));
         el.bpm.value = state.bpm;
+        savePreset();
+      }
+
+      function clampNumber(value, min, max, fallback) {
+        const number = Number(value);
+        if (!Number.isFinite(number)) return fallback;
+        return Math.max(min, Math.min(max, number));
+      }
+
+      function fixedLengthArray(value, fallback = "") {
+        const source = Array.isArray(value) ? value.slice(0, STEPS) : [];
+        while (source.length < STEPS) source.push(fallback);
+        return source;
+      }
+
+      function normalizeScene(rawScene, index) {
+        const blankScene = createBlankScene(index);
+        const source = rawScene && typeof rawScene === "object" ? rawScene : {};
+        return {
+          name: typeof source.name === "string" && source.name.trim() ? source.name.trim() : blankScene.name,
+          rhythm: fixedLengthArray(source.rhythm, "").map((value) => String(value || "")),
+          harmony: fixedLengthArray(source.harmony, "").map((value) => String(value || "")),
+          drums: Object.fromEntries(TRACKS.map((track) => [
+            track.key,
+            fixedLengthArray(source.drums?.[track.key], false).map(Boolean),
+          ])),
+          trackVolumes: Object.fromEntries(TRACKS.map((track) => [
+            track.key,
+            clampNumber(source.trackVolumes?.[track.key], 0, 1, blankScene.trackVolumes[track.key]),
+          ])),
+        };
+      }
+
+      function presetSnapshot() {
+        return {
+          version: 1,
+          presetName: PRESET_NAME,
+          bpm: state.bpm,
+          currentScene: state.currentScene,
+          strumLength: state.strumLength,
+          padAttack: state.padAttack,
+          volumes: { ...state.volumes },
+          chordCatalog: { ...state.chordCatalog },
+          scenes: state.scenes.map((scene, index) => normalizeScene(scene, index)),
+        };
+      }
+
+      function savePreset() {
+        try {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(presetSnapshot()));
+        } catch (error) {
+          console.warn("Could not save Skanker preset", error);
+        }
+      }
+
+      function loadPreset() {
+        try {
+          const rawPreset = window.localStorage.getItem(STORAGE_KEY);
+          if (!rawPreset) return;
+          const preset = JSON.parse(rawPreset);
+          if (!preset || typeof preset !== "object") return;
+
+          state.bpm = clampNumber(preset.bpm, 60, 200, state.bpm);
+          state.currentScene = Math.trunc(clampNumber(preset.currentScene, 0, state.scenes.length - 1, 0));
+          state.strumLength = clampNumber(preset.strumLength, 0.05, 0.25, state.strumLength);
+          state.padAttack = clampNumber(preset.padAttack, 0.02, 0.4, state.padAttack);
+          state.volumes = {
+            master: clampNumber(preset.volumes?.master, 0, 1, state.volumes.master),
+            rhythm: clampNumber(preset.volumes?.rhythm, 0, 1, state.volumes.rhythm),
+            harmony: clampNumber(preset.volumes?.harmony, 0, 1, state.volumes.harmony),
+            drums: clampNumber(preset.volumes?.drums, 0, 1, state.volumes.drums),
+          };
+          state.chordCatalog = preset.chordCatalog && typeof preset.chordCatalog === "object"
+            ? Object.fromEntries(Object.entries(preset.chordCatalog).map(([name, notes]) => [chordName(name), String(notes || "")]).filter(([name]) => name))
+            : state.chordCatalog;
+          state.scenes = Array.from({ length: state.scenes.length }, (_, index) => normalizeScene(preset.scenes?.[index], index));
+        } catch (error) {
+          console.warn("Could not load Skanker preset", error);
+        }
       }
 
       function renderScenes() {
@@ -970,12 +1057,14 @@
               state.pendingScene = null;
               releaseHarmony(audioContext?.currentTime || 0);
             }
+            savePreset();
             renderAll();
           });
           tab.addEventListener("dblclick", () => {
             const nextName = window.prompt("Scene name", scene.name);
             if (nextName && nextName.trim()) {
               scene.name = nextName.trim();
+              savePreset();
               renderScenes();
             }
           });
@@ -1013,6 +1102,7 @@
           trackVolumes: { ...source.trackVolumes },
         };
         state.currentScene = target;
+        savePreset();
         renderAll();
       }
 
@@ -1024,6 +1114,7 @@
         state.scenes[deletingScene] = createBlankScene(deletingScene);
         if (state.pendingScene === deletingScene) state.pendingScene = null;
         releaseHarmony(audioContext?.currentTime || 0);
+        savePreset();
         renderAll();
       }
 
@@ -1037,11 +1128,13 @@
         const scene = currentScene();
         moveArrayItem(scene.rhythm, fromStep, toStep);
         moveArrayItem(scene.harmony, fromStep, toStep);
+        savePreset();
         renderAll();
       }
 
       function moveDrumStep(trackKey, fromStep, toStep) {
         moveArrayItem(currentScene().drums[trackKey], fromStep, toStep);
+        savePreset();
         renderDrumGrid();
       }
 
@@ -1149,6 +1242,7 @@
           nextCatalog[name] = notes;
         });
         state.chordCatalog = nextCatalog;
+        savePreset();
         renderChordGrid();
         closeCatalog();
       }
@@ -1217,6 +1311,7 @@
         updateChordInputValidity(input);
         input.addEventListener("input", () => {
           scene[layer][step] = input.value.trim();
+          savePreset();
           updateChordInputValidity(input);
         });
         input.addEventListener("keydown", (event) => {
@@ -1224,6 +1319,7 @@
           if (event.key === "Escape") {
             input.value = committedValue;
             scene[layer][step] = committedValue;
+            savePreset();
             updateChordInputValidity(input);
             input.blur();
           }
@@ -1238,6 +1334,7 @@
           committedValue = value && parsed ? parsed.label : value;
           scene[layer][step] = committedValue;
           input.value = committedValue;
+          savePreset();
           updateChordInputValidity(input);
         });
       }
@@ -1261,6 +1358,7 @@
           head.innerHTML = `<strong>${track.label}</strong><label class="track-label">Volume <input type="range" min="0" max="1" step="0.01" value="${scene.trackVolumes[track.key]}"></label>`;
           head.querySelector("input").addEventListener("input", (event) => {
             scene.trackVolumes[track.key] = Number(event.target.value);
+            savePreset();
           });
 
           const steps = document.createElement("div");
@@ -1277,6 +1375,7 @@
             cell.addEventListener("click", () => {
               if (suppressNextStepClick) return;
               scene.drums[track.key][step] = !scene.drums[track.key][step];
+              savePreset();
               renderDrumGrid();
             });
             steps.append(cell);
@@ -1300,6 +1399,10 @@
         el.bpm.value = state.bpm;
         el.strum.value = state.strumLength;
         el.padAttack.value = state.padAttack;
+        el.masterVolume.value = state.volumes.master;
+        el.rhythmVolume.value = state.volumes.rhythm;
+        el.harmonyVolume.value = state.volumes.harmony;
+        el.drumVolume.value = state.volumes.drums;
       }
 
       el.play.addEventListener("click", startPlayback);
@@ -1307,23 +1410,33 @@
       el.bpm.addEventListener("change", (event) => setBpm(event.target.value));
       el.bpmDown.addEventListener("click", () => setBpm(state.bpm - 1));
       el.bpmUp.addEventListener("click", () => setBpm(state.bpm + 1));
-      el.strum.addEventListener("input", (event) => state.strumLength = Number(event.target.value));
-      el.padAttack.addEventListener("input", (event) => state.padAttack = Number(event.target.value));
+      el.strum.addEventListener("input", (event) => {
+        state.strumLength = Number(event.target.value);
+        savePreset();
+      });
+      el.padAttack.addEventListener("input", (event) => {
+        state.padAttack = Number(event.target.value);
+        savePreset();
+      });
       el.masterVolume.addEventListener("input", (event) => {
         state.volumes.master = Number(event.target.value);
         applyVolumes();
+        savePreset();
       });
       el.rhythmVolume.addEventListener("input", (event) => {
         state.volumes.rhythm = Number(event.target.value);
         applyVolumes();
+        savePreset();
       });
       el.harmonyVolume.addEventListener("input", (event) => {
         state.volumes.harmony = Number(event.target.value);
         applyVolumes();
+        savePreset();
       });
       el.drumVolume.addEventListener("input", (event) => {
         state.volumes.drums = Number(event.target.value);
         applyVolumes();
+        savePreset();
       });
       el.catalogOpen.addEventListener("click", openCatalog);
       el.catalogClose.addEventListener("click", closeCatalog);
@@ -1331,6 +1444,7 @@
       el.catalogSave.addEventListener("click", saveCatalog);
       el.catalogDialog.addEventListener("cancel", closeCatalog);
 
+      loadPreset();
       renderAll();
     </script>
   </body>
