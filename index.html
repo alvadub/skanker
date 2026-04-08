@@ -75,9 +75,9 @@
       }
 
       .app {
-        width: min(1440px, calc(100vw - 2rem));
+        width: calc(100vw - 1rem);
         margin: 0 auto;
-        padding: 2rem 0 3rem;
+        padding: 1rem 0 3rem;
       }
 
       .workspace {
@@ -190,6 +190,30 @@
         box-shadow: 0 0 0 2px rgba(0, 212, 170, 0.16);
       }
 
+      .scene-loop-control {
+        align-items: center;
+        color: var(--muted);
+        display: flex;
+        font-size: 0.88rem;
+        gap: 0.45rem;
+        margin-bottom: 0.65rem;
+      }
+
+      .scene-loop-control input {
+        width: auto;
+      }
+
+      .scene-tab-row {
+        display: grid;
+        gap: 0.35rem;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+      }
+
+      .scene-tab-row .scene-move {
+        padding-inline: 0.6rem;
+        width: auto;
+      }
+
       .grid-head {
         display: flex;
         justify-content: space-between;
@@ -232,43 +256,38 @@
 
       .step-grid {
         display: grid;
-        grid-template-columns: repeat(16, minmax(2.8rem, 1fr));
-        gap: 0.4rem;
+        grid-template-columns: repeat(16, minmax(3.2rem, 1fr));
+        gap: 0.28rem;
       }
 
-      .chord-cell,
-      .drum-cell {
+      .chord-cell {
         position: relative;
-        min-height: 4.6rem;
+        min-height: 3.65rem;
         border: 1px solid var(--line);
-        border-radius: 0.75rem;
+        border-radius: 0.55rem;
         background: #12151a;
         overflow: hidden;
       }
 
       .chord-cell {
-        padding: 0.55rem;
+        padding: 0.34rem;
         cursor: grab;
       }
 
-      .chord-cell.beat,
-      .drum-cell.beat {
+      .chord-cell.beat {
         border-left-width: 3px;
       }
 
-      .chord-cell.playing,
-      .drum-cell.playing {
+      .chord-cell.playing {
         outline: 2px solid #fff;
         outline-offset: 2px;
       }
 
-      .chord-cell.dragging,
-      .drum-cell.dragging {
+      .chord-cell.dragging {
         opacity: 0.55;
       }
 
-      .chord-cell.drag-over,
-      .drum-cell.drag-over {
+      .chord-cell.drag-over {
         border-color: var(--rhythm);
         box-shadow: inset 0 0 0 2px rgba(245, 184, 61, 0.32);
       }
@@ -280,18 +299,18 @@
       .step-number {
         display: block;
         color: var(--muted);
-        font-size: 0.68rem;
-        margin-bottom: 0.35rem;
+        font-size: 0.56rem;
+        margin-bottom: 0.22rem;
       }
 
       .layer-row {
         display: grid;
-        grid-template-columns: 1rem minmax(0, 1fr);
-        gap: 0.25rem;
+        grid-template-columns: minmax(0, 1fr);
         align-items: center;
-        min-height: 1.25rem;
+        min-height: 1rem;
+        font-size: 0.72rem;
         font-weight: 700;
-        line-height: 1.2;
+        line-height: 1.1;
       }
 
       .layer-row.rhythm {
@@ -300,12 +319,6 @@
 
       .layer-row.harmony {
         color: var(--harmony);
-      }
-
-      .layer-badge {
-        color: currentColor;
-        font-size: 0.68rem;
-        opacity: 0.72;
       }
 
       .chord-input {
@@ -425,7 +438,7 @@
       .drum-row .step-grid,
       .beat-label-row .step-grid {
         grid-template-columns: repeat(32, minmax(0.8rem, 1fr));
-        gap: 0.18rem;
+        gap: 0.2rem;
       }
 
       .beat-label-spacer {
@@ -446,7 +459,7 @@
 
       .track-head {
         display: grid;
-        grid-template-columns: 4.5rem minmax(18rem, 1fr) auto;
+        grid-template-columns: 4.5rem minmax(18rem, 1fr) auto auto auto;
         gap: 0.5rem;
         align-items: center;
         border: 1px solid var(--line);
@@ -463,18 +476,13 @@
 
       .drum-pattern-input {
         width: 100%;
-        border-color: transparent;
-        background: #0f1115;
         font-family: "SFMono-Regular", Consolas, monospace;
         font-size: 0.78rem;
         letter-spacing: 0.04em;
-        padding-block: 0.32rem;
       }
 
       .drum-pattern-input.invalid {
-        border-color: var(--danger);
-        color: var(--danger);
-        box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.16);
+        color: rgba(255, 255, 255, 0.01);
       }
 
       .drum-pattern-help {
@@ -495,38 +503,299 @@
         width: 5rem;
       }
 
-      .drum-cell {
-        display: block;
+      .track-mute-label {
+        align-items: center;
+        color: var(--muted);
+        display: flex;
+        font-size: 0.78rem;
+        gap: 0.3rem;
+        white-space: nowrap;
+      }
+
+      .track-mute-label input {
+        width: auto;
+      }
+
+      .chord-lane-mutes {
+        display: flex;
+        gap: 0.55rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .bass-panel {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .bass-panel label {
+        display: grid;
+        gap: 0.3rem;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      .bass-panel select,
+      .bass-panel input {
         width: 100%;
-        height: 100%;
-        min-height: 0.65rem;
-        padding: 0;
-        touch-action: manipulation;
-        cursor: default;
       }
 
-      .drum-cell.on {
-        background: rgba(154, 164, 178, 0.24);
-        border-color: var(--drum);
+      .bass-keyboard-map {
+        display: grid;
+        gap: 0.18rem;
       }
 
-      .drum-cell.ghost {
-        background: rgba(154, 164, 178, 0.1);
-        border-color: rgba(154, 164, 178, 0.72);
+      .bass-key-row {
+        display: grid;
+        grid-template-columns: repeat(17, minmax(0.9rem, 1fr));
+        gap: 0.12rem;
       }
 
-      .drum-cell.on::after,
-      .drum-cell.ghost::after {
-        content: "";
-        position: absolute;
-        inset: 0.12rem;
+      .bass-key {
+        border: 1px solid var(--line);
+        border-radius: 0.4rem;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 0.72rem;
+        padding: 0.18rem 0.32rem;
+        text-align: center;
+      }
+
+      .bass-key.black {
+        background: #0f1115;
+        color: var(--muted);
+      }
+
+      .bass-key.white {
+        background: #f0ead6;
+        color: #16191f;
+      }
+
+      .bass-key.pressed {
+        border-color: var(--rhythm);
+        box-shadow: 0 0 0 2px rgba(245, 184, 61, 0.35);
+        transform: translateY(1px);
+      }
+
+      .bass-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.45rem;
+      }
+
+      .bassline-roll {
+        background:
+          repeating-linear-gradient(90deg, rgba(154, 164, 178, 0.12) 0 1px, transparent 1px calc(100% / 32)),
+          linear-gradient(180deg, rgba(74, 222, 128, 0.1), rgba(74, 222, 128, 0.02));
+        border-radius: 0.45rem;
+        height: 1.75rem;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .bassline-roll-note {
+        background: var(--harmony);
         border-radius: 999px;
-        background: var(--drum);
+        box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.35);
+        height: 0.25rem;
+        min-width: 0.35rem;
+        position: absolute;
       }
 
-      .drum-cell.ghost::after {
-        opacity: 0.38;
-        transform: scale(0.72);
+      .bassline-roll-playhead {
+        background: var(--rhythm);
+        box-shadow: 0 0 0 1px rgba(245, 184, 61, 0.7), 0 0 0 3px rgba(245, 184, 61, 0.16);
+        height: 100%;
+        opacity: 0.92;
+        position: absolute;
+        top: 0;
+        width: 2px;
+      }
+
+      .bassline-help {
+        border: 1px solid var(--line);
+        border-radius: 0.75rem;
+        color: var(--muted);
+        font-size: 0.72rem;
+        line-height: 1.35;
+        padding: 0.45rem 0.6rem;
+      }
+
+      .bass-editor {
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .bass-editor-head {
+        align-items: baseline;
+        display: flex;
+        gap: 0.6rem;
+      }
+
+      .bass-editor-head strong {
+        color: var(--harmony);
+        font-size: 0.9rem;
+      }
+
+      .bass-editor-fields {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .bass-editor-part {
+        border-top: 1px solid var(--line);
+        display: grid;
+        gap: 0.65rem;
+        padding-top: 0.75rem;
+      }
+
+      .bass-editor-part:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      .bass-editor-part-head {
+        align-items: baseline;
+        display: flex;
+        gap: 0.7rem;
+      }
+
+      .bass-editor-part-head strong {
+        color: var(--harmony);
+      }
+
+      .bass-editor-stats {
+        color: var(--muted);
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 0.76rem;
+      }
+
+      .bass-editor-fields label {
+        display: grid;
+        gap: 0.3rem;
+      }
+
+      .bass-editor-fields input {
+        width: 100%;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        letter-spacing: 0.04em;
+      }
+
+      .bass-text-overlay-wrap {
+        box-shadow: inset 0 -1px 0 rgba(154, 164, 178, 0.18);
+        display: grid;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 0.78rem;
+        letter-spacing: 0.04em;
+        line-height: 1.4em;
+        min-height: 1.4em;
+        position: relative;
+      }
+
+      .bass-text-overlay-wrap:focus-within {
+        box-shadow: inset 0 -1px 0 rgba(74, 222, 128, 0.45);
+      }
+
+      .bass-text-overlay-wrap.invalid {
+        box-shadow: inset 0 -1px 0 rgba(255, 107, 107, 0.8);
+      }
+
+      .bass-text-overlay-wrap input {
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        caret-color: var(--text);
+        color: rgba(255, 255, 255, 0.01);
+        display: block;
+        font: inherit;
+        height: 1.4em;
+        letter-spacing: inherit;
+        line-height: 1.4em;
+        outline: 0;
+        padding: 0;
+        position: relative;
+        width: 100%;
+        z-index: 2;
+      }
+
+      .bass-text-overlay-wrap input.invalid {
+        color: rgba(255, 255, 255, 0.01);
+      }
+
+      .bass-pattern-input.invalid,
+      .bass-notes-input.invalid,
+      .chord-pool-input.invalid,
+      .chord-pattern-input.invalid {
+        border-color: var(--danger);
+        box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.16);
+      }
+
+      .bass-text-preview {
+        box-sizing: border-box;
+        color: var(--muted);
+        font: inherit;
+        height: 1.4em;
+        inset: 0;
+        letter-spacing: inherit;
+        line-height: 1.4em;
+        overflow: hidden;
+        padding: 0;
+        pointer-events: none;
+        position: absolute;
+        white-space: nowrap;
+        z-index: 1;
+      }
+
+      .bass-text-preview span {
+        border-radius: 0.25rem;
+      }
+
+      .bass-text-preview span.on {
+        color: var(--harmony);
+        font-weight: 800;
+      }
+
+      .bass-text-preview span.accent {
+        color: var(--rhythm);
+        font-weight: 900;
+      }
+
+      .bass-text-preview span.sustain {
+        color: rgba(74, 222, 128, 0.7);
+      }
+
+      .bass-text-preview span.rest {
+        color: rgba(154, 164, 178, 0.38);
+      }
+
+      .bass-text-preview span.extra,
+      .bass-text-preview span.invalid {
+        color: var(--danger);
+      }
+
+      .catalog-dialog.bass-editor-dialog[open],
+      .catalog-dialog.chord-editor-dialog[open] {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+      }
+
+      .catalog-dialog.bass-editor-dialog,
+      .catalog-dialog.chord-editor-dialog {
+        width: 80vw;
+        height: 80vh;
+      }
+
+      .bass-editor-dialog .bass-editor,
+      .chord-editor-dialog .bass-editor {
+        min-height: 0;
+        overflow: auto;
+      }
+
+      .bass-text-preview span.playing {
+        background: var(--rhythm);
+        box-shadow: 0 0 0 1px rgba(245, 184, 61, 0.75), 0 0 0 3px rgba(245, 184, 61, 0.2);
+        color: #0b0d10;
+        font-weight: 900;
       }
 
       .hint {
@@ -676,7 +945,7 @@
 
         .drum-row .step-grid,
         .beat-label-row .step-grid {
-          grid-template-columns: repeat(16, minmax(1rem, 1fr));
+          grid-template-columns: repeat(32, minmax(0.7rem, 1fr));
         }
 
         .catalog-row,
@@ -752,7 +1021,35 @@
 
           <section class="panel" aria-label="Scenes">
             <h2>Scenes</h2>
+            <label class="scene-loop-control">
+              <input id="scene-loop-toggle" type="checkbox" />
+              Keep active scene looping
+            </label>
             <div class="scene-tabs" id="scene-tabs"></div>
+          </section>
+
+          <section class="panel bass-panel" aria-label="Bass keyboard">
+            <h2>Bass Keyboard</h2>
+            <div class="bass-actions">
+              <button id="bass-toggle" type="button">Bass Keyboard Off</button>
+              <button id="bass-record-toggle" type="button">Record Bass Off</button>
+            </div>
+            <div class="bass-keyboard-map" aria-label="Bass keyboard note map">
+              <div class="bass-key-row" aria-label="Black-key row">
+                <span class="bass-key black" data-bass-key="KeyW" style="grid-column: 2;">W</span><span class="bass-key black" data-bass-key="KeyE" style="grid-column: 4;">E</span><span class="bass-key black" data-bass-key="KeyT" style="grid-column: 7;">T</span><span class="bass-key black" data-bass-key="KeyY" style="grid-column: 9;">Y</span><span class="bass-key black" data-bass-key="KeyU" style="grid-column: 11;">U</span><span class="bass-key black" data-bass-key="KeyO" style="grid-column: 14;">O</span><span class="bass-key black" data-bass-key="KeyP" style="grid-column: 16;">P</span>
+              </div>
+              <div class="bass-key-row" aria-label="White-key row">
+                <span class="bass-key white" data-bass-key="KeyA" style="grid-column: 1;">A</span><span class="bass-key white" data-bass-key="KeyS" style="grid-column: 3;">S</span><span class="bass-key white" data-bass-key="KeyD" style="grid-column: 5;">D</span><span class="bass-key white" data-bass-key="KeyF" style="grid-column: 6;">F</span><span class="bass-key white" data-bass-key="KeyG" style="grid-column: 8;">G</span><span class="bass-key white" data-bass-key="KeyH" style="grid-column: 10;">H</span><span class="bass-key white" data-bass-key="KeyJ" style="grid-column: 12;">J</span><span class="bass-key white" data-bass-key="KeyK" style="grid-column: 13;">K</span><span class="bass-key white" data-bass-key="KeyL" style="grid-column: 15;">L</span><span class="bass-key white" data-bass-key="Semicolon" style="grid-column: 17;">Ñ</span>
+              </div>
+            </div>
+            <label>Preset <select id="bass-preset"></select></label>
+            <label>Shape <select id="bass-shape"></select></label>
+            <label>Octave <input id="bass-octave" type="number" min="0" max="4" step="1" value="2" /></label>
+            <label>Volume <input id="bass-volume" type="range" min="0" max="1" step="0.01" value="0.65" /></label>
+            <label>Glide <input id="bass-glide" type="range" min="0" max="0.2" step="0.01" value="0.04" /></label>
+            <label>Release <input id="bass-release" type="range" min="0.04" max="1" step="0.01" value="0.2" /></label>
+            <button id="bass-clear" type="button">Clear Bassline</button>
+            <p class="hint">Turn Bass Keyboard on, then use the previewed keys to play chromatically from the selected octave.</p>
           </section>
 
           <section class="panel" aria-label="Catalogs and saved patterns">
@@ -775,6 +1072,11 @@
                 <h2>Chord Grid</h2>
                 <p>Edit Rhythm and Harmony directly in the stacked fields. Empty or invalid entries stay editable and do not play.</p>
               </div>
+              <div class="chord-lane-mutes">
+                <label class="track-mute-label">Mute Rhythm <input id="rhythm-mute" type="checkbox" /></label>
+                <label class="track-mute-label">Mute Harmony <input id="harmony-mute" type="checkbox" /></label>
+                <button id="chord-editor-open" type="button">Edit Chords</button>
+              </div>
             </div>
             <div id="chord-grid" class="step-grid" aria-label="Chord steps"></div>
             <p class="hint">Use chord symbols in the grid, then configure their note lists in the catalog. Inline voicings like Cm=g3,c4,eb4 still work.</p>
@@ -784,7 +1086,7 @@
             <div class="grid-head">
               <div>
                 <h2>Drum Grid</h2>
-                <p>Four synthesized drum lanes share the same 32-step clock.</p>
+                <p>Four synthesized drum lanes share the same 32-step clock as the chord loop.</p>
               </div>
             </div>
             <div id="drum-grid" class="drum-grid" aria-label="Drum steps"></div>
@@ -831,8 +1133,46 @@
       <p class="hint">Current choices are saved in your local preset. WebAudioFont options require a network connection the first time they load.</p>
     </dialog>
 
+    <dialog id="bass-editor-dialog" class="catalog-dialog bass-editor-dialog">
+      <div class="catalog-head">
+        <div>
+          <h2>Bassline Editor</h2>
+          <p>Edit the bassline with a note pool and a pulse pattern. Pattern x consumes the next note and - rests. Manual _ sustains still work.</p>
+        </div>
+        <button id="bass-editor-close" aria-label="Close bassline editor">Close</button>
+      </div>
+      <div id="bass-editor" class="bass-editor" data-bass-editor></div>
+      <p class="hint">The editor uses the current Bass Keyboard octave as its visible range. Change the octave in the sidebar, then reopen or refresh the editor.</p>
+    </dialog>
+
+    <dialog id="chord-editor-dialog" class="catalog-dialog chord-editor-dialog">
+      <div class="catalog-head">
+        <div>
+          <h2>Chord/Harmony Editor</h2>
+              <p>Edit Rhythm and Harmony with chord pools and pulse patterns. x consumes the next chord, _ sustains or starts after silence, and - rests.</p>
+        </div>
+        <button id="chord-editor-close" aria-label="Close chord and harmony editor">Close</button>
+      </div>
+      <div id="chord-editor" class="bass-editor" data-chord-editor></div>
+      <p class="hint">This editor compiles back into the existing 32-step Rhythm and Harmony grid.</p>
+    </dialog>
+
     <script>
       const STEPS = 32;
+      const DRUM_STEPS = STEPS;
+      const CHORD_STEPS = STEPS;
+      const LOOP_STEPS = STEPS;
+      const SCENE_SLOTS = 10;
+      const BASS_TICKS_PER_STEP = 4;
+      const BASS_TICKS = STEPS * BASS_TICKS_PER_STEP;
+      const BASS_EDITOR_PARTS = 2;
+      const BASS_EDITOR_PART_TICKS = BASS_TICKS / BASS_EDITOR_PARTS;
+      const CHORD_EDITOR_PARTS = 2;
+      const CHORD_EDITOR_PART_STEPS = CHORD_STEPS / CHORD_EDITOR_PARTS;
+      const CHORD_EDITOR_LAYERS = [
+        { key: "rhythm", label: "Rhythm" },
+        { key: "harmony", label: "Harmony" },
+      ];
       const TRACKS = [
         { key: "kick", label: "Kick", volume: 0.9 },
         { key: "snare", label: "Snare", volume: 0.75 },
@@ -902,6 +1242,20 @@
         rhythm: ["internal", "guitar", "piano", "strings"],
         harmony: ["internal", "strings", "piano", "guitar"],
       };
+      const BASS_PRESETS = {
+        sub: { label: "Sub Sine", shape: "sine", filter: 420, glide: 0.04, release: 0.22 },
+        dub: { label: "Dub Triangle", shape: "triangle", filter: 520, glide: 0.08, release: 0.32 },
+        rubber: { label: "Rubber Saw", shape: "sawtooth", filter: 360, glide: 0.06, release: 0.18 },
+        square: { label: "Square Bass", shape: "square", filter: 640, glide: 0.03, release: 0.14 },
+        custom: { label: "Custom", shape: "sine", filter: 520, glide: 0.04, release: 0.2 },
+      };
+      const BASS_SHAPES = ["sine", "triangle", "sawtooth", "square"];
+      const BASS_KEYS = [
+        ["KeyA", 0], ["KeyW", 1], ["KeyS", 2], ["KeyE", 3], ["KeyD", 4], ["KeyF", 5],
+        ["KeyT", 6], ["KeyG", 7], ["KeyY", 8], ["KeyH", 9], ["KeyU", 10], ["KeyJ", 11], ["KeyK", 12],
+        ["KeyO", 13], ["KeyL", 14], ["KeyP", 15], ["Semicolon", 16],
+      ];
+      const BASS_KEY_MAP = new Map(BASS_KEYS);
       const DRUM_KIT_CATALOG = {
         internal: { label: "Internal Drums" },
         standard: { label: "WebAudioFont Standard Kit", suffix: "0_FluidR3_GM_sf2_file" },
@@ -925,6 +1279,7 @@
         bpm: 100,
         currentScene: 0,
         pendingScene: null,
+        loopActiveScene: false,
         playhead: -1,
         isPlaying: false,
         strumLength: 0.12,
@@ -943,9 +1298,20 @@
           harmony: "internal",
           drums: { kick: "internal", snare: "internal", hihat: "internal", openhat: "internal" },
         },
+        bass: {
+          enabled: false,
+          preset: "sub",
+          octave: 2,
+          volume: 0.65,
+          filter: 420,
+          glide: 0.04,
+          release: 0.22,
+          recording: false,
+          layers: [{ shape: "sine", detune: 0, gain: 1 }],
+        },
         volumes: { master: 0.8, rhythm: 0.55, harmony: 0.35, drums: 0.75 },
         chordCatalog: { ...DEFAULT_CHORD_CATALOG },
-        scenes: Array.from({ length: 4 }, (_, index) => createScene(index)),
+        scenes: Array.from({ length: SCENE_SLOTS }, (_, index) => createScene(index)),
       };
 
       let audioContext;
@@ -953,15 +1319,19 @@
       let rhythmGain;
       let harmonyGain;
       let drumGain;
+      let bassGain;
       let schedulerTimer = null;
       let nextStepIndex = 0;
       let nextNoteTime = 0;
+      let currentStepStartTime = 0;
       let harmonyVoice = null;
       let draggedStep = null;
       let suppressNextStepClick = false;
       let webAudioFontPlayer = null;
+      let lastBassMidi = null;
       const webAudioFontPresets = new Map();
       const webAudioFontLoading = new Map();
+      const activeBassNotes = new Map();
 
       const el = {
         status: document.getElementById("status"),
@@ -975,6 +1345,23 @@
         rhythmSound: document.getElementById("rhythm-sound"),
         harmonySound: document.getElementById("harmony-sound"),
         drumSounds: Object.fromEntries([...document.querySelectorAll("[data-drum-sound]")].map((select) => [select.dataset.drumSound, select])),
+        bassToggle: document.getElementById("bass-toggle"),
+        bassRecordToggle: document.getElementById("bass-record-toggle"),
+        bassClear: document.getElementById("bass-clear"),
+        bassEditorDialog: document.getElementById("bass-editor-dialog"),
+        bassEditorClose: document.getElementById("bass-editor-close"),
+        chordEditorOpen: document.getElementById("chord-editor-open"),
+        chordEditorDialog: document.getElementById("chord-editor-dialog"),
+        chordEditorClose: document.getElementById("chord-editor-close"),
+        rhythmMute: document.getElementById("rhythm-mute"),
+        harmonyMute: document.getElementById("harmony-mute"),
+        bassPreset: document.getElementById("bass-preset"),
+        bassShape: document.getElementById("bass-shape"),
+        bassOctave: document.getElementById("bass-octave"),
+        bassVolume: document.getElementById("bass-volume"),
+        bassGlide: document.getElementById("bass-glide"),
+        bassRelease: document.getElementById("bass-release"),
+        sceneLoopToggle: document.getElementById("scene-loop-toggle"),
         sceneTabs: document.getElementById("scene-tabs"),
         chordGrid: document.getElementById("chord-grid"),
         chordPresetsToggle: document.getElementById("chord-presets-toggle"),
@@ -1007,9 +1394,9 @@
           scene.rhythm[28] = "F7";
           scene.harmony[0] = "C";
           scene.harmony[16] = "F";
-          for (let step = 0; step < STEPS; step += 4) scene.drums.kick[step] = 1;
+          for (let step = 0; step < DRUM_STEPS; step += 4) scene.drums.kick[step] = 1;
           [8, 24].forEach((step) => scene.drums.snare[step] = 1);
-          for (let step = 2; step < STEPS; step += 4) scene.drums.hihat[step] = 1;
+          for (let step = 2; step < DRUM_STEPS; step += 4) scene.drums.hihat[step] = 1;
           [15, 31].forEach((step) => scene.drums.openhat[step] = 1);
         }
 
@@ -1019,9 +1406,16 @@
       function createBlankScene(index) {
         return {
           name: `Scene ${index + 1}`,
-          rhythm: Array(STEPS).fill(""),
-          harmony: Array(STEPS).fill(""),
-          drums: Object.fromEntries(TRACKS.map((track) => [track.key, Array(STEPS).fill(0)])),
+          rhythm: Array(CHORD_STEPS).fill(""),
+          harmony: Array(CHORD_STEPS).fill(""),
+          bass: [],
+          drums: Object.fromEntries(TRACKS.map((track) => [track.key, Array(DRUM_STEPS).fill(0)])),
+          mutes: {
+            rhythm: false,
+            harmony: false,
+            bass: false,
+            drums: Object.fromEntries(TRACKS.map((track) => [track.key, false])),
+          },
           trackVolumes: Object.fromEntries(TRACKS.map((track) => [track.key, track.volume])),
         };
       }
@@ -1172,9 +1566,11 @@
         rhythmGain = audioContext.createGain();
         harmonyGain = audioContext.createGain();
         drumGain = audioContext.createGain();
+        bassGain = audioContext.createGain();
         rhythmGain.connect(masterGain);
         harmonyGain.connect(masterGain);
         drumGain.connect(masterGain);
+        bassGain.connect(masterGain);
         masterGain.connect(audioContext.destination);
         applyVolumes();
       }
@@ -1186,6 +1582,7 @@
         rhythmGain.gain.setTargetAtTime(state.volumes.rhythm, time, 0.01);
         harmonyGain.gain.setTargetAtTime(state.volumes.harmony, time, 0.01);
         drumGain.gain.setTargetAtTime(state.volumes.drums, time, 0.01);
+        bassGain.gain.setTargetAtTime(state.bass.volume, time, 0.01);
       }
 
       function drumSoundDefinition(kitKey, trackKey) {
@@ -1445,21 +1842,147 @@
         noise.stop(time + duration);
       }
 
+      function bassMidiForOffset(offset) {
+        return (state.bass.octave + 1) * 12 + offset;
+      }
+
+      function releaseBassNote(code, time = audioContext?.currentTime || 0) {
+        const voice = activeBassNotes.get(code);
+        if (!voice) return;
+        activeBassNotes.delete(code);
+        setBassKeyPressed(code, false);
+        voice.envelopes.forEach((envelope) => {
+          envelope.gain.cancelScheduledValues(time);
+          envelope.gain.setTargetAtTime(0.0001, time, state.bass.release);
+        });
+        voice.oscillators.forEach((osc) => osc.stop(time + state.bass.release + 0.1));
+      }
+
+      function releaseAllBassNotes() {
+        if (!audioContext) return;
+        [...activeBassNotes.keys()].forEach((code) => releaseBassNote(code, audioContext.currentTime));
+      }
+
+      function createBassVoice(midi, time, releaseAt = null, velocity = 1) {
+        const destination = audioContext.createGain();
+        const filter = audioContext.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(state.bass.filter, time);
+        filter.Q.setValueAtTime(5, time);
+        destination.connect(filter).connect(bassGain);
+
+        const voices = state.bass.layers.map((layer) => {
+          const osc = audioContext.createOscillator();
+          const envelope = audioContext.createGain();
+          const frequency = midiToHz(midi);
+          osc.type = layer.shape;
+          if (lastBassMidi !== null && state.bass.glide > 0) {
+            osc.frequency.setValueAtTime(midiToHz(lastBassMidi), time);
+            osc.frequency.linearRampToValueAtTime(frequency, time + state.bass.glide);
+          } else {
+            osc.frequency.setValueAtTime(frequency, time);
+          }
+          osc.detune.setValueAtTime(layer.detune, time);
+          envelope.gain.setValueAtTime(0.0001, time);
+          envelope.gain.exponentialRampToValueAtTime(Math.max(0.0001, layer.gain * velocity), time + 0.015);
+          osc.connect(envelope).connect(destination);
+          osc.start(time);
+          if (releaseAt !== null) {
+            envelope.gain.setTargetAtTime(0.0001, releaseAt, state.bass.release);
+            osc.stop(releaseAt + state.bass.release + 0.1);
+          }
+          return { osc, envelope };
+        });
+
+        lastBassMidi = midi;
+        return voices;
+      }
+
+      function playScheduledBassNote(note, time) {
+        if (!note) return;
+        const tickDuration = 60 / state.bpm / 4 / BASS_TICKS_PER_STEP;
+        const duration = Math.max(tickDuration * 0.8, tickDuration * note.length * 0.88);
+        createBassVoice(note.midi, time, time + duration, note.velocity);
+      }
+
+      function bassRecordTick() {
+        const stepDuration = 60 / state.bpm / 4;
+        const tickDuration = stepDuration / BASS_TICKS_PER_STEP;
+        const elapsed = audioContext ? audioContext.currentTime - currentStepStartTime : 0;
+        const subTick = Math.trunc(clampNumber(Math.floor(elapsed / tickDuration), 0, BASS_TICKS_PER_STEP - 1, 0));
+        return (state.playhead % STEPS) * BASS_TICKS_PER_STEP + subTick;
+      }
+
+      function recordBassNote(code, midi) {
+        if (!state.bass.recording || !state.isPlaying || state.playhead < 0) return;
+        const scene = currentScene();
+        const tick = bassRecordTick();
+        scene.bass = scene.bass.filter((event) => event.tick !== tick);
+        scene.bass.push({ tick, code, midi, length: BASS_TICKS_PER_STEP, velocity: 1 });
+        sortAndTrimBassEvents(scene.bass);
+        savePreset();
+        renderBassRoll();
+        renderBassEditor();
+        el.status.textContent = `Recorded bass ${bassNoteLabel({ midi })} on bass step ${(state.playhead % STEPS) + 1}.${(tick % BASS_TICKS_PER_STEP) + 1}`;
+      }
+
+      function playBassNote(code, offset) {
+        ensureAudio();
+        audioContext.resume();
+        if (activeBassNotes.has(code)) return;
+        const midi = bassMidiForOffset(offset);
+        const voices = createBassVoice(midi, audioContext.currentTime);
+        activeBassNotes.set(code, {
+          oscillators: voices.map((voice) => voice.osc),
+          envelopes: voices.map((voice) => voice.envelope),
+        });
+        setBassKeyPressed(code, true);
+        recordBassNote(code, midi);
+      }
+
+      function activeChordAt(layerValues, step) {
+        for (let offset = 0; offset < CHORD_STEPS; offset += 1) {
+          const index = (step - offset + CHORD_STEPS) % CHORD_STEPS;
+          const value = String(layerValues[index] || "").trim();
+          if (value) return value;
+        }
+        return "";
+      }
+
+      function activeChordStatus(scene, step) {
+        const rhythmChord = activeChordAt(scene.rhythm, step);
+        const harmonyChord = activeChordAt(scene.harmony, step);
+        if (!rhythmChord && !harmonyChord) return "";
+        return ` | Rhythm ${rhythmChord || "-"} | Harmony ${harmonyChord || "-"}`;
+      }
+
       function scheduleStep(step, time) {
         const scene = currentScene();
         const rhythmChord = scene.rhythm[step];
         const harmonyChord = scene.harmony[step];
-        if (rhythmChord) playRhythm(rhythmChord, time);
-        if (harmonyChord || step === 0) playHarmony(harmonyChord, time);
+        const drumStep = step % DRUM_STEPS;
+        const bassStep = step % STEPS;
+        if (rhythmChord && !scene.mutes?.rhythm) playRhythm(rhythmChord, time);
+        if (!scene.mutes?.harmony && (harmonyChord || step === 0)) playHarmony(harmonyChord, time);
+        if (!scene.mutes?.bass) {
+          bassEventsForStep(scene, bassStep).forEach((event) => {
+            const tickOffset = event.tick % BASS_TICKS_PER_STEP;
+            const tickDuration = 60 / state.bpm / 4 / BASS_TICKS_PER_STEP;
+            playScheduledBassNote(event, time + tickOffset * tickDuration);
+          });
+        }
         TRACKS.forEach((track) => {
-          const velocity = normalizeDrumValue(scene.drums[track.key][step]);
+          if (scene.mutes?.drums?.[track.key]) return;
+          const velocity = normalizeDrumValue(scene.drums[track.key][drumStep]);
           if (velocity > 0) playDrum(track.key, time, velocity);
         });
         window.setTimeout(() => {
           if (!state.isPlaying) return;
           state.playhead = step;
+          currentStepStartTime = time;
           renderPlayhead();
-          el.status.textContent = `Playing ${currentScene().name} - step ${step + 1}`;
+          const activeScene = currentScene();
+          el.status.textContent = `Playing ${activeScene.name} - chord step ${step + 1}${activeChordStatus(activeScene, step)}`;
         }, Math.max(0, (time - audioContext.currentTime) * 1000));
       }
 
@@ -1467,14 +1990,8 @@
         while (nextNoteTime < audioContext.currentTime + 0.1) {
           scheduleStep(nextStepIndex, nextNoteTime);
           nextNoteTime += 60 / state.bpm / 4;
-          nextStepIndex = (nextStepIndex + 1) % STEPS;
-          if (nextStepIndex === 0 && state.pendingScene !== null) {
-            state.currentScene = state.pendingScene;
-            state.pendingScene = null;
-            releaseHarmony(nextNoteTime);
-            savePreset();
-            renderAll();
-          }
+          nextStepIndex = (nextStepIndex + 1) % LOOP_STEPS;
+          if (nextStepIndex === 0) advanceSceneSequence(nextNoteTime);
         }
       }
 
@@ -1502,6 +2019,7 @@
         state.playhead = -1;
         state.pendingScene = null;
         if (audioContext) releaseHarmony(audioContext.currentTime);
+        releaseAllBassNotes();
         el.status.textContent = "Stopped";
         if (render) renderAll();
       }
@@ -1518,9 +2036,9 @@
         return Math.max(min, Math.min(max, number));
       }
 
-      function fixedLengthArray(value, fallback = "") {
-        const source = Array.isArray(value) ? value.slice(0, STEPS) : [];
-        while (source.length < STEPS) source.push(fallback);
+      function fixedLengthArray(value, fallback = "", length = STEPS) {
+        const source = Array.isArray(value) ? value.slice(0, length) : [];
+        while (source.length < length) source.push(fallback);
         return source;
       }
 
@@ -1529,37 +2047,384 @@
         if (value === false || value === null || value === undefined) return 0;
         const number = Number(value);
         if (!Number.isFinite(number) || number <= 0) return 0;
-        return number >= 1 ? 1 : 0.5;
+        return Math.min(1, number);
+      }
+
+      function drumLengthArray(value) {
+        const source = Array.isArray(value) ? value.slice(0, DRUM_STEPS) : [];
+        if (!source.length) return Array(DRUM_STEPS).fill(0);
+        const seed = source.slice();
+        if (DRUM_STEPS % seed.length === 0) {
+          while (source.length < DRUM_STEPS) source.push(...seed);
+        }
+        while (source.length < DRUM_STEPS) source.push(0);
+        return source.slice(0, DRUM_STEPS);
       }
 
       function drumValueToSymbol(value) {
         const normalized = normalizeDrumValue(value);
-        if (normalized >= 1) return "x";
-          if (normalized > 0) return "_";
+        if (normalized >= 0.95) return "X";
+        if (normalized > 0) return "x";
         return "-";
       }
 
-      function formatDrumPattern(values) {
-        const symbols = fixedLengthArray(values, 0).map(drumValueToSymbol);
+      function normalizeBassNote(value) {
+        if (!value || typeof value !== "object") return null;
+        const midi = Number(value.midi);
+        if (!Number.isFinite(midi)) return null;
+        const code = typeof value.code === "string" && BASS_KEY_MAP.has(value.code) ? value.code : "";
+        return { midi: Math.trunc(clampNumber(midi, 12, 96, 36)), code };
+      }
+
+      function normalizeBassEvent(value, fallbackTick = 0) {
+        const note = normalizeBassNote(value);
+        if (!note) return null;
+        const rawTick = Number.isFinite(Number(value.tick)) ? Number(value.tick) : fallbackTick;
+        const rawLength = Number.isFinite(Number(value.length)) ? Number(value.length) : BASS_TICKS_PER_STEP;
+        return {
+          tick: Math.trunc(clampNumber(rawTick, 0, BASS_TICKS - 1, fallbackTick)),
+          midi: note.midi,
+          length: Math.trunc(clampNumber(rawLength, 1, BASS_TICKS, BASS_TICKS_PER_STEP)),
+          velocity: clampNumber(value.velocity, 0, 1, 1),
+          code: note.code,
+        };
+      }
+
+      function normalizeBassEvents(value) {
+        if (!Array.isArray(value)) return [];
+        return sortAndTrimBassEvents(value
+          .map((entry, index) => normalizeBassEvent(entry, index * BASS_TICKS_PER_STEP))
+          .filter(Boolean));
+      }
+
+      function sortAndTrimBassEvents(events) {
+        events.sort((left, right) => left.tick - right.tick);
+        events.forEach((event, index) => {
+          const nextEvent = events[index + 1];
+          const maxLength = nextEvent ? nextEvent.tick - event.tick : BASS_TICKS - event.tick;
+          event.length = Math.max(1, Math.min(event.length, maxLength));
+        });
+        return events;
+      }
+
+      function bassNoteLabel(note) {
+        if (!note) return "";
+        const names = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+        return `${names[note.midi % 12]}${Math.floor(note.midi / 12) - 1}`;
+      }
+
+      function bassEventStep(event) {
+        return Math.floor(event.tick / BASS_TICKS_PER_STEP);
+      }
+
+      function bassEventsForStep(scene, step) {
+        return scene.bass.filter((event) => bassEventStep(event) === step);
+      }
+
+      function parseBassNotes(rawNotes) {
+        const tokens = String(rawNotes || "").trim().split(/\s+/).filter(Boolean);
+        if (!tokens.length) return [];
+        const notes = tokens.map(parseNoteName);
+        return notes.some((note) => !note) ? null : notes;
+      }
+
+      function parseBassPattern(rawPattern, maxTicks = BASS_TICKS) {
+        const raw = String(rawPattern || "").trim();
+        if (!raw) return [];
+        if (/[^xX_\-\s|.0]/.test(raw)) return null;
+        const symbols = [...raw.replace(/[\s|]/g, "").replace(/[.0]/g, "-")];
+        if (!symbols.length || symbols.length > maxTicks) return null;
+        return symbols;
+      }
+
+      function bassPatternNoteStartCount(pattern) {
+        return bassPatternStats(pattern).pulses;
+      }
+
+      function bassPatternStats(pattern) {
+        const stats = { pulses: 0, sustains: 0, rests: 0, ticks: pattern.length };
+        let hasActiveNote = false;
+        pattern.forEach((symbol) => {
+          if (symbol === "x" || symbol === "X" || (symbol === "_" && !hasActiveNote)) {
+            stats.pulses += 1;
+            hasActiveNote = true;
+            return;
+          }
+          if (symbol === "_") {
+            stats.sustains += 1;
+            return;
+          }
+          stats.rests += 1;
+          hasActiveNote = false;
+        });
+        return stats;
+      }
+
+      function bassPatternToEvents(rawNotes, rawPattern, tickOffset = 0, maxTicks = BASS_TICKS) {
+        const notes = parseBassNotes(rawNotes);
+        const pattern = parseBassPattern(rawPattern, maxTicks);
+        if (!notes || !pattern) return null;
+        if (notes.length !== bassPatternNoteStartCount(pattern)) return null;
+        const events = [];
+        let noteIndex = 0;
+        let currentEvent = null;
+        pattern.forEach((symbol, tick) => {
+          if (symbol === "x" || symbol === "X" || (symbol === "_" && !currentEvent)) {
+            const note = notes[noteIndex];
+            if (!note) return;
+            currentEvent = { tick: tickOffset + tick, midi: note.midi, length: 1, velocity: 1, code: "" };
+            events.push(currentEvent);
+            noteIndex += 1;
+            return;
+          }
+          if (symbol === "_" && currentEvent) {
+            currentEvent.length += 1;
+            return;
+          }
+          currentEvent = null;
+        });
+        return sortAndTrimBassEvents(events);
+      }
+
+      function formatBassPattern(events) {
+        const symbols = Array(BASS_TICKS).fill("-");
+        normalizeBassEvents(events).forEach((event) => {
+          symbols[event.tick] = "x";
+        });
+        return formatBassPatternSymbols(symbols);
+      }
+
+      function formatBassPatternPart(events, partIndex) {
+        const tickOffset = partIndex * BASS_EDITOR_PART_TICKS;
+        const symbols = Array(BASS_EDITOR_PART_TICKS).fill("-");
+        normalizeBassEvents(events)
+          .filter((event) => event.tick >= tickOffset && event.tick < tickOffset + BASS_EDITOR_PART_TICKS)
+          .forEach((event) => {
+            symbols[event.tick - tickOffset] = "x";
+          });
+        return formatBassPatternSymbols(symbols);
+      }
+
+      function formatBassPatternSymbols(symbols) {
+        const groups = [];
+        for (let index = 0; index < symbols.length; index += BASS_TICKS_PER_STEP) {
+          groups.push(symbols.slice(index, index + BASS_TICKS_PER_STEP).join(""));
+        }
+        return groups.join(" ");
+      }
+
+      function formatBassNotes(events, partIndex = null) {
+        const tickOffset = partIndex === null ? 0 : partIndex * BASS_EDITOR_PART_TICKS;
+        const tickLimit = partIndex === null ? BASS_TICKS : tickOffset + BASS_EDITOR_PART_TICKS;
+        return normalizeBassEvents(events)
+          .filter((event) => event.tick >= tickOffset && event.tick < tickLimit)
+          .map(bassNoteLabel)
+          .join(" ");
+      }
+
+      function updateBassEditorPartValidity(notesInput, patternInput, statsEl) {
+        const notes = parseBassNotes(notesInput.value);
+        const pattern = parseBassPattern(patternInput.value, BASS_EDITOR_PART_TICKS);
+        const stats = pattern ? bassPatternStats(pattern) : { pulses: 0, sustains: 0, rests: 0, ticks: 0 };
+        const invalidNotes = notes === null || (pattern !== null && notes.length !== stats.pulses);
+        notesInput.classList.toggle("invalid", invalidNotes);
+        notesInput.toggleAttribute("aria-invalid", invalidNotes);
+        patternInput.classList.toggle("invalid", pattern === null);
+        patternInput.toggleAttribute("aria-invalid", pattern === null);
+        notesInput.title = invalidNotes
+          ? `Enter exactly ${stats.pulses} note${stats.pulses === 1 ? "" : "s"} for this part. Each x starts a note; _ starts one only after silence.`
+          : "";
+        patternInput.title = pattern === null
+          ? `Use X, x, _, and - for up to ${BASS_EDITOR_PART_TICKS} fine pulses. Spaces, ., and 0 are allowed separators/rests.`
+          : "";
+        if (statsEl) {
+          statsEl.textContent = `notes ${notes?.length ?? 0}/${stats.pulses} | pulses ${stats.pulses} | sustains ${stats.sustains} | rests ${stats.rests} | ticks ${stats.ticks}/${BASS_EDITOR_PART_TICKS}`;
+        }
+        return {
+          events: invalidNotes || pattern === null ? null : bassPatternToEvents(notesInput.value, patternInput.value, Number(notesInput.dataset.tickOffset) || 0, BASS_EDITOR_PART_TICKS),
+          pattern,
+          stats,
+        };
+      }
+
+      function updateBassEditorFromParts(editor) {
+        const parts = [...editor.querySelectorAll("[data-bass-editor-part]")];
+        const results = parts.map((part) => updateBassEditorPartValidity(
+          part.querySelector(".bass-notes-input"),
+          part.querySelector(".bass-pattern-input"),
+          part.querySelector(".bass-editor-stats"),
+        ));
+        if (results.some((result) => !result.events)) return;
+        currentScene().bass = sortAndTrimBassEvents(results.flatMap((result) => result.events));
+        savePreset();
+        renderBassRoll();
+      }
+
+      function parseChordPool(rawChords) {
+        const tokens = String(rawChords || "").trim().split(/\s+/).filter(Boolean);
+        if (!tokens.length) return [];
+        const chords = tokens.map((token) => parseChord(token));
+        return chords.some((chord) => !chord) ? null : chords.map((chord) => chord.label);
+      }
+
+      function parseChordPattern(rawPattern, maxSteps = CHORD_STEPS) {
+        const raw = String(rawPattern || "").trim();
+        if (!raw) return [];
+        if (/[^xX_\-\s|.0]/.test(raw)) return null;
+        const symbols = [...raw.replace(/[\s|]/g, "").replace(/[.0]/g, "-")];
+        if (!symbols.length || symbols.length > maxSteps) return null;
+        return symbols;
+      }
+
+      function chordPatternStats(pattern) {
+        const stats = { pulses: 0, sustains: 0, rests: 0, steps: pattern.length };
+        let hasActiveChord = false;
+        pattern.forEach((symbol) => {
+          if (symbol === "x" || symbol === "X" || (symbol === "_" && !hasActiveChord)) {
+            stats.pulses += 1;
+            hasActiveChord = true;
+            return;
+          }
+          if (symbol === "_") {
+            stats.sustains += 1;
+            return;
+          }
+          stats.rests += 1;
+          hasActiveChord = false;
+        });
+        return stats;
+      }
+
+      function chordPatternToSlots(rawChords, rawPattern, maxSteps = CHORD_EDITOR_PART_STEPS) {
+        const chords = parseChordPool(rawChords);
+        const pattern = parseChordPattern(rawPattern, maxSteps);
+        if (!chords || !pattern) return null;
+        if (chords.length !== chordPatternStats(pattern).pulses) return null;
+        const slots = Array(maxSteps).fill("");
+        let chordIndex = 0;
+        let currentChord = "";
+        pattern.forEach((symbol, step) => {
+          if (symbol === "x" || symbol === "X" || (symbol === "_" && !currentChord)) {
+            currentChord = chords[chordIndex] || "";
+            slots[step] = currentChord;
+            chordIndex += 1;
+            return;
+          }
+          if (symbol === "_" && currentChord) {
+            slots[step] = currentChord;
+            return;
+          }
+          currentChord = "";
+        });
+        return slots;
+      }
+
+      function chordPatternSymbolGroups(symbols) {
         const groups = [];
         for (let index = 0; index < symbols.length; index += 4) {
           groups.push(symbols.slice(index, index + 4).join(""));
         }
-        return `${groups.slice(0, 4).join(" ")} | ${groups.slice(4).join(" ")}`;
+        return groups.join(" ");
+      }
+
+      function chordLayerPartValues(layerValues, partIndex) {
+        const startStep = partIndex * CHORD_EDITOR_PART_STEPS;
+        return fixedLengthArray(layerValues, "", CHORD_STEPS).slice(startStep, startStep + CHORD_EDITOR_PART_STEPS);
+      }
+
+      function formatChordPatternPart(layerValues, partIndex) {
+        const symbols = [];
+        let currentChord = "";
+        chordLayerPartValues(layerValues, partIndex).forEach((rawValue) => {
+          const value = String(rawValue || "").trim();
+          if (!value) {
+            symbols.push("-");
+            currentChord = "";
+            return;
+          }
+          if (currentChord && value === currentChord) {
+            symbols.push("_");
+            return;
+          }
+          symbols.push("x");
+          currentChord = value;
+        });
+        return chordPatternSymbolGroups(symbols);
+      }
+
+      function formatChordPoolPart(layerValues, partIndex) {
+        const chords = [];
+        let currentChord = "";
+        chordLayerPartValues(layerValues, partIndex).forEach((rawValue) => {
+          const value = String(rawValue || "").trim();
+          if (!value) {
+            currentChord = "";
+            return;
+          }
+          if (currentChord && value === currentChord) return;
+          chords.push(value);
+          currentChord = value;
+        });
+        return chords.join(" ");
+      }
+
+      function formatDrumPattern(values) {
+        const symbols = drumLengthArray(values).map(drumValueToSymbol);
+        const groups = [];
+        for (let index = 0; index < symbols.length; index += 4) {
+          groups.push(symbols.slice(index, index + 4).join(""));
+        }
+        return groups.join(" ");
       }
 
       function parseDrumPattern(value) {
-        const raw = String(value || "").trim().toLowerCase();
+        const raw = String(value || "").trim();
         if (!raw) return null;
-        if (/[^x_\-\s|.0]/.test(raw)) return null;
+        if (/[^xX_\-\s|.0]/.test(raw)) return null;
         const symbols = [...raw.replace(/[\s|]/g, "").replace(/[.0]/g, "-")];
-        if (!symbols.length || symbols.length > STEPS || STEPS % symbols.length !== 0) return null;
+        if (!symbols.length || symbols.length > DRUM_STEPS || DRUM_STEPS % symbols.length !== 0) return null;
         const expanded = [];
-        while (expanded.length < STEPS) expanded.push(...symbols);
-        return expanded.slice(0, STEPS).map((symbol) => {
-          if (symbol === "x") return 1;
-          if (symbol === "_") return 0.5;
+        while (expanded.length < DRUM_STEPS) expanded.push(...symbols);
+        return expanded.slice(0, DRUM_STEPS).map((symbol) => {
+          if (symbol === "X") return 1;
+          if (symbol === "x") return 0.72;
           return 0;
+        });
+      }
+
+      function renderDrumPatternPreview(preview, rawPattern) {
+        if (!preview) return;
+        preview.replaceChildren();
+        const raw = String(rawPattern || "");
+        const activeStep = state.playhead >= 0 ? state.playhead % DRUM_STEPS : -1;
+        let step = 0;
+        [...raw].forEach((char) => {
+          if (/[\s|]/.test(char)) {
+            preview.append(document.createTextNode(char));
+            return;
+          }
+          const cell = document.createElement("span");
+          cell.textContent = char;
+          const normalized = char === "." || char === "0" ? "-" : char;
+          if (!["x", "X", "_", "-"].includes(normalized) || step >= DRUM_STEPS) {
+            cell.className = "invalid";
+          } else {
+            cell.classList.toggle("accent", normalized === "X");
+            cell.classList.toggle("on", normalized === "x");
+            cell.classList.toggle("sustain", normalized === "_");
+            cell.classList.toggle("rest", normalized === "-");
+            cell.classList.toggle("playing", step === activeStep);
+          }
+          step += 1;
+          preview.append(cell);
+        });
+      }
+
+      function renderDrumPatternPreviews() {
+        document.querySelectorAll(".drum-pattern-preview").forEach((preview) => {
+          const input = preview.parentElement?.querySelector(".drum-pattern-input");
+          renderDrumPatternPreview(preview, input?.value);
+          if (input) preview.scrollLeft = input.scrollLeft;
         });
       }
 
@@ -1568,12 +2433,22 @@
         const source = rawScene && typeof rawScene === "object" ? rawScene : {};
         return {
           name: typeof source.name === "string" && source.name.trim() ? source.name.trim() : blankScene.name,
-          rhythm: fixedLengthArray(source.rhythm, "").map((value) => String(value || "")),
-          harmony: fixedLengthArray(source.harmony, "").map((value) => String(value || "")),
+          rhythm: fixedLengthArray(source.rhythm, "", CHORD_STEPS).map((value) => String(value || "")),
+          harmony: fixedLengthArray(source.harmony, "", CHORD_STEPS).map((value) => String(value || "")),
+          bass: normalizeBassEvents(source.bass),
           drums: Object.fromEntries(TRACKS.map((track) => [
             track.key,
-            fixedLengthArray(source.drums?.[track.key], 0).map(normalizeDrumValue),
+            drumLengthArray(source.drums?.[track.key]).map(normalizeDrumValue),
           ])),
+          mutes: {
+            rhythm: Boolean(source.mutes?.rhythm),
+            harmony: Boolean(source.mutes?.harmony),
+            bass: Boolean(source.mutes?.bass),
+            drums: Object.fromEntries(TRACKS.map((track) => [
+              track.key,
+              Boolean(source.mutes?.drums?.[track.key]),
+            ])),
+          },
           trackVolumes: Object.fromEntries(TRACKS.map((track) => [
             track.key,
             clampNumber(source.trackVolumes?.[track.key], 0, 1, blankScene.trackVolumes[track.key]),
@@ -1595,7 +2470,7 @@
           updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : new Date().toISOString(),
           drums: Object.fromEntries(TRACKS.map((track) => [
             track.key,
-            fixedLengthArray(source.drums?.[track.key], 0).map(normalizeDrumValue),
+            drumLengthArray(source.drums?.[track.key]).map(normalizeDrumValue),
           ])),
         };
       }
@@ -1604,7 +2479,7 @@
         const scene = currentScene();
         return Object.fromEntries(TRACKS.map((track) => [
           track.key,
-          fixedLengthArray(scene.drums[track.key], 0).map(normalizeDrumValue),
+          drumLengthArray(scene.drums[track.key]).map(normalizeDrumValue),
         ]));
       }
 
@@ -1650,8 +2525,8 @@
           name,
           createdAt: typeof source.createdAt === "string" ? source.createdAt : new Date().toISOString(),
           updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : new Date().toISOString(),
-          rhythm: fixedLengthArray(source.rhythm, "").map((value) => String(value || "").trim()),
-          harmony: fixedLengthArray(source.harmony, "").map((value) => String(value || "").trim()),
+          rhythm: fixedLengthArray(source.rhythm, "", CHORD_STEPS).map((value) => String(value || "").trim()),
+          harmony: fixedLengthArray(source.harmony, "", CHORD_STEPS).map((value) => String(value || "").trim()),
           chordCatalog,
         };
       }
@@ -1659,8 +2534,8 @@
       function currentChordPattern() {
         const scene = currentScene();
         return {
-          rhythm: fixedLengthArray(scene.rhythm, "").map((value) => String(value || "").trim()),
-          harmony: fixedLengthArray(scene.harmony, "").map((value) => String(value || "").trim()),
+          rhythm: fixedLengthArray(scene.rhythm, "", CHORD_STEPS).map((value) => String(value || "").trim()),
+          harmony: fixedLengthArray(scene.harmony, "", CHORD_STEPS).map((value) => String(value || "").trim()),
           chordCatalog: { ...state.chordCatalog },
         };
       }
@@ -1693,12 +2568,46 @@
         }
       }
 
+      function normalizeBassSettings(source = {}) {
+        const rawPreset = Object.prototype.hasOwnProperty.call(BASS_PRESETS, source.preset) ? source.preset : "sub";
+        const preset = BASS_PRESETS[rawPreset];
+        const rawLayer = Array.isArray(source.layers) && source.layers[0] ? source.layers[0] : {};
+        const shape = BASS_SHAPES.includes(rawLayer.shape) ? rawLayer.shape : preset.shape;
+        return {
+          enabled: Boolean(source.enabled),
+          preset: rawPreset,
+          octave: Math.trunc(clampNumber(source.octave, 0, 4, 2)),
+          volume: clampNumber(source.volume, 0, 1, 0.65),
+          filter: clampNumber(source.filter, 120, 1800, preset.filter),
+          glide: clampNumber(source.glide, 0, 0.2, preset.glide),
+          release: clampNumber(source.release, 0.04, 1, preset.release),
+          recording: Boolean(source.recording),
+          layers: [{
+            shape,
+            detune: clampNumber(rawLayer.detune, -1200, 1200, 0),
+            gain: clampNumber(rawLayer.gain, 0, 1, 1),
+          }],
+        };
+      }
+
+      function applyBassPreset(presetKey) {
+        const preset = BASS_PRESETS[presetKey] || BASS_PRESETS.sub;
+        state.bass.preset = presetKey;
+        state.bass.filter = preset.filter;
+        state.bass.glide = preset.glide;
+        state.bass.release = preset.release;
+        state.bass.layers = [{ ...state.bass.layers[0], shape: preset.shape }];
+        savePreset();
+        renderBassControls();
+      }
+
       function presetSnapshot() {
         return {
           version: 1,
           presetName: PRESET_NAME,
           bpm: state.bpm,
           currentScene: state.currentScene,
+          loopActiveScene: state.loopActiveScene,
           strumLength: state.strumLength,
           padAttack: state.padAttack,
           drumPresetPanelOpen: state.drumPresetPanelOpen,
@@ -1707,6 +2616,7 @@
           chordPresetPanelOpen: state.chordPresetPanelOpen,
           activeChordPreset: state.activeChordPreset ? { ...state.activeChordPreset } : null,
           sounds: { ...state.sounds },
+          bass: normalizeBassSettings(state.bass),
           volumes: { ...state.volumes },
           chordCatalog: { ...state.chordCatalog },
           scenes: state.scenes.map((scene, index) => normalizeScene(scene, index)),
@@ -1730,6 +2640,7 @@
 
           state.bpm = clampNumber(preset.bpm, 60, 200, state.bpm);
           state.currentScene = Math.trunc(clampNumber(preset.currentScene, 0, state.scenes.length - 1, 0));
+          state.loopActiveScene = Boolean(preset.loopActiveScene);
           state.strumLength = clampNumber(preset.strumLength, 0.05, 0.25, state.strumLength);
           state.padAttack = clampNumber(preset.padAttack, 0.02, 0.4, state.padAttack);
           state.drumPresetPanelOpen = Boolean(preset.drumPresetPanelOpen);
@@ -1756,6 +2667,7 @@
               : state.sounds.harmony,
             drums: normalizeDrumSounds(preset.sounds?.drums),
           };
+          state.bass = normalizeBassSettings(preset.bass);
           state.volumes = {
             master: clampNumber(preset.volumes?.master, 0, 1, state.volumes.master),
             rhythm: clampNumber(preset.volumes?.rhythm, 0, 1, state.volumes.rhythm),
@@ -1782,23 +2694,17 @@
 
       function renderScenes() {
         el.sceneTabs.replaceChildren();
+        el.sceneLoopToggle.checked = state.loopActiveScene;
         state.scenes.forEach((scene, index) => {
+          const row = document.createElement("div");
+          row.className = "scene-tab-row";
+
           const tab = document.createElement("button");
-          tab.textContent = `${index + 1}: ${scene.name}`;
+          const slotLabel = index === 9 ? "0" : String(index + 1);
+          tab.textContent = `${slotLabel}: ${scene.name}`;
           tab.classList.toggle("active", index === state.currentScene);
           tab.classList.toggle("pending", index === state.pendingScene);
-          tab.addEventListener("click", () => {
-            if (state.isPlaying && index !== state.currentScene) {
-              state.pendingScene = index;
-              el.status.textContent = `Queued ${scene.name}`;
-            } else {
-              state.currentScene = index;
-              state.pendingScene = null;
-              releaseHarmony(audioContext?.currentTime || 0);
-            }
-            savePreset();
-            renderAll();
-          });
+          tab.addEventListener("click", () => selectScene(index));
           tab.addEventListener("dblclick", () => {
             const nextName = window.prompt("Scene name", scene.name);
             if (nextName && nextName.trim()) {
@@ -1807,7 +2713,25 @@
               renderScenes();
             }
           });
-          el.sceneTabs.append(tab);
+
+          const moveUp = document.createElement("button");
+          moveUp.type = "button";
+          moveUp.className = "scene-move";
+          moveUp.textContent = "↑";
+          moveUp.disabled = index === 0;
+          moveUp.setAttribute("aria-label", `Move ${scene.name} earlier`);
+          moveUp.addEventListener("click", () => moveScene(index, index - 1));
+
+          const moveDown = document.createElement("button");
+          moveDown.type = "button";
+          moveDown.className = "scene-move";
+          moveDown.textContent = "↓";
+          moveDown.disabled = index === state.scenes.length - 1;
+          moveDown.setAttribute("aria-label", `Move ${scene.name} later`);
+          moveDown.addEventListener("click", () => moveScene(index, index + 1));
+
+          row.append(tab, moveUp, moveDown);
+          el.sceneTabs.append(row);
         });
 
         const clone = document.createElement("button");
@@ -1817,16 +2741,54 @@
         el.sceneTabs.append(clone);
 
         const deleteButton = document.createElement("button");
-        deleteButton.textContent = "Delete Scene";
+        deleteButton.textContent = "Clear Scene";
         deleteButton.disabled = !hasContent(currentScene());
-        deleteButton.addEventListener("click", deleteCurrentScene);
+        deleteButton.addEventListener("click", clearCurrentScene);
         el.sceneTabs.append(deleteButton);
       }
 
       function hasContent(scene) {
         return scene.rhythm.some(Boolean)
           || scene.harmony.some(Boolean)
+          || scene.bass.some(Boolean)
           || TRACKS.some((track) => scene.drums[track.key].some(Boolean));
+      }
+
+      function selectScene(index, startIfStopped = false) {
+        const scene = state.scenes[index];
+        if (!scene) return;
+        if (state.isPlaying && index !== state.currentScene) {
+          state.pendingScene = index;
+          el.status.textContent = `Queued ${scene.name}`;
+        } else {
+          state.currentScene = index;
+          state.pendingScene = null;
+          releaseHarmony(audioContext?.currentTime || 0);
+        }
+        savePreset();
+        renderAll();
+        if (startIfStopped && !state.isPlaying) startPlayback();
+      }
+
+      function nextContentSceneIndex(fromIndex) {
+        for (let offset = 1; offset < state.scenes.length; offset += 1) {
+          const index = (fromIndex + offset) % state.scenes.length;
+          if (hasContent(state.scenes[index])) return index;
+        }
+        return fromIndex;
+      }
+
+      function advanceSceneSequence(time) {
+        if (state.loopActiveScene && state.pendingScene === null) return;
+        const target = state.pendingScene !== null
+          ? state.pendingScene
+          : nextContentSceneIndex(state.currentScene);
+        state.pendingScene = null;
+        if (target === state.currentScene) return;
+        state.currentScene = target;
+        releaseHarmony(time);
+        savePreset();
+        renderAll();
       }
 
       function cloneCurrentScene() {
@@ -1837,7 +2799,17 @@
           name: `${source.name} copy`,
           rhythm: [...source.rhythm],
           harmony: [...source.harmony],
+          bass: source.bass.map((note) => note ? { ...note } : null),
           drums: Object.fromEntries(TRACKS.map((track) => [track.key, [...source.drums[track.key]]])),
+          mutes: {
+            rhythm: Boolean(source.mutes?.rhythm),
+            harmony: Boolean(source.mutes?.harmony),
+            bass: Boolean(source.mutes?.bass),
+            drums: Object.fromEntries(TRACKS.map((track) => [
+              track.key,
+              Boolean(source.mutes?.drums?.[track.key]),
+            ])),
+          },
           trackVolumes: { ...source.trackVolumes },
         };
         state.currentScene = target;
@@ -1845,13 +2817,37 @@
         renderAll();
       }
 
-      function deleteCurrentScene() {
+      function reindexSceneNames() {
+        state.scenes.forEach((scene, index) => {
+          if (/^Scene \d+$/.test(scene.name)) scene.name = `Scene ${index + 1}`;
+        });
+      }
+
+      function remapMovedIndex(value, fromIndex, toIndex) {
+        if (value === null || value === undefined) return value;
+        if (value === fromIndex) return toIndex;
+        if (fromIndex < toIndex && value > fromIndex && value <= toIndex) return value - 1;
+        if (fromIndex > toIndex && value >= toIndex && value < fromIndex) return value + 1;
+        return value;
+      }
+
+      function moveScene(fromIndex, toIndex) {
+        if (toIndex < 0 || toIndex >= state.scenes.length || fromIndex === toIndex) return;
+        moveArrayItem(state.scenes, fromIndex, toIndex);
+        state.currentScene = remapMovedIndex(state.currentScene, fromIndex, toIndex);
+        state.pendingScene = remapMovedIndex(state.pendingScene, fromIndex, toIndex);
+        reindexSceneNames();
+        savePreset();
+        renderAll();
+      }
+
+      function clearCurrentScene() {
         const scene = currentScene();
         if (!hasContent(scene)) return;
-        if (!window.confirm(`Delete ${scene.name}? This clears its chords and drums.`)) return;
-        const deletingScene = state.currentScene;
-        state.scenes[deletingScene] = createBlankScene(deletingScene);
-        if (state.pendingScene === deletingScene) state.pendingScene = null;
+        if (!window.confirm(`Clear ${scene.name}? This removes its chords, bassline, and drums but keeps the scene slot.`)) return;
+        const clearingScene = state.currentScene;
+        state.scenes[clearingScene] = createBlankScene(clearingScene);
+        if (state.pendingScene === clearingScene) state.pendingScene = null;
         releaseHarmony(audioContext?.currentTime || 0);
         savePreset();
         renderAll();
@@ -1869,6 +2865,19 @@
         moveArrayItem(scene.harmony, fromStep, toStep);
         savePreset();
         renderAll();
+      }
+
+      function moveBassStepEvents(events, fromStep, toStep) {
+        events.forEach((event) => {
+          const step = bassEventStep(event);
+          const subTick = event.tick % BASS_TICKS_PER_STEP;
+          let nextStep = step;
+          if (step === fromStep) nextStep = toStep;
+          else if (fromStep < toStep && step > fromStep && step <= toStep) nextStep = step - 1;
+          else if (fromStep > toStep && step >= toStep && step < fromStep) nextStep = step + 1;
+          event.tick = nextStep * BASS_TICKS_PER_STEP + subTick;
+        });
+        sortAndTrimBassEvents(events);
       }
 
       function bindStepDrag(cell, dragData, onMove) {
@@ -1942,6 +2951,32 @@
 
       function closeSoundCatalog() {
         el.soundDialog.close();
+      }
+
+      function openBassEditor() {
+        renderBassEditor();
+        if (typeof el.bassEditorDialog.showModal === "function") {
+          el.bassEditorDialog.showModal();
+        } else {
+          el.bassEditorDialog.setAttribute("open", "");
+        }
+      }
+
+      function closeBassEditor() {
+        el.bassEditorDialog.close();
+      }
+
+      function openChordEditor() {
+        renderChordEditor();
+        if (typeof el.chordEditorDialog.showModal === "function") {
+          el.chordEditorDialog.showModal();
+        } else {
+          el.chordEditorDialog.setAttribute("open", "");
+        }
+      }
+
+      function closeChordEditor() {
+        el.chordEditorDialog.close();
       }
 
       function renderCatalogRows(extraRows = []) {
@@ -2029,8 +3064,8 @@
         const preset = state.userChordPresets.find((entry) => entry.id === id);
         if (!preset) return;
         const scene = currentScene();
-        scene.rhythm = fixedLengthArray(preset.rhythm, "").map((value) => String(value || "").trim());
-        scene.harmony = fixedLengthArray(preset.harmony, "").map((value) => String(value || "").trim());
+        scene.rhythm = fixedLengthArray(preset.rhythm, "", CHORD_STEPS).map((value) => String(value || "").trim());
+        scene.harmony = fixedLengthArray(preset.harmony, "", CHORD_STEPS).map((value) => String(value || "").trim());
         state.chordCatalog = { ...state.chordCatalog, ...preset.chordCatalog };
         state.activeChordPreset = { type: "user", preset: preset.id };
         savePreset();
@@ -2164,7 +3199,9 @@
       function renderChordGrid() {
         el.chordGrid.replaceChildren();
         const scene = currentScene();
-        for (let step = 0; step < STEPS; step += 1) {
+        el.rhythmMute.checked = Boolean(scene.mutes?.rhythm);
+        el.harmonyMute.checked = Boolean(scene.mutes?.harmony);
+        for (let step = 0; step < CHORD_STEPS; step += 1) {
           const cell = document.createElement("div");
           cell.className = "chord-cell";
           cell.classList.toggle("beat", step % 4 === 0);
@@ -2173,12 +3210,10 @@
           cell.innerHTML = `
             <span class="step-number">${step + 1}</span>
             <label class="layer-row rhythm">
-              <span class="layer-badge">R</span>
-              <input class="chord-input ${scene.rhythm[step] && !parseChord(scene.rhythm[step]) ? "invalid" : ""}" data-layer="rhythm" value="${escapeAttr(scene.rhythm[step])}" />
+              <input class="chord-input ${scene.rhythm[step] && !parseChord(scene.rhythm[step]) ? "invalid" : ""}" data-layer="rhythm" aria-label="Rhythm chord step ${step + 1}" value="${escapeAttr(scene.rhythm[step])}" />
             </label>
             <label class="layer-row harmony">
-              <span class="layer-badge">H</span>
-              <input class="chord-input ${scene.harmony[step] && !parseChord(scene.harmony[step]) ? "invalid" : ""}" data-layer="harmony" value="${escapeAttr(scene.harmony[step])}" />
+              <input class="chord-input ${scene.harmony[step] && !parseChord(scene.harmony[step]) ? "invalid" : ""}" data-layer="harmony" aria-label="Harmony chord step ${step + 1}" value="${escapeAttr(scene.harmony[step])}" />
             </label>
           `;
           cell.querySelectorAll(".chord-input").forEach((input) => bindChordInput(input, step));
@@ -2229,18 +3264,412 @@
         input.title = invalid ? "This entry is editable but will not play until it is a supported chord or explicit voicing." : "";
       }
 
-      function renderDrumGridCells() {
+      function renderBassRoll() {
+        const roll = document.querySelector("[data-bassline-roll]");
+        if (!roll) return;
         const scene = currentScene();
-        document.querySelectorAll(".drum-cell").forEach((cell) => {
-          const track = cell.dataset.track;
-          const step = Number(cell.dataset.step);
-          if (!track || !Number.isInteger(step)) return;
-          const drumValue = normalizeDrumValue(scene.drums[track]?.[step]);
-          const trackLabel = TRACKS.find((entry) => entry.key === track)?.label || track;
-          cell.classList.toggle("on", drumValue === 1);
-          cell.classList.toggle("ghost", drumValue === 0.5);
-          cell.classList.toggle("playing", step === state.playhead);
-          cell.ariaLabel = `${trackLabel} step ${step + 1} ${drumValue === 1 ? "hit" : (drumValue === 0.5 ? "ghost" : "off")}`;
+        const events = normalizeBassEvents(scene.bass);
+        const midiValues = events.map((event) => event.midi);
+        const minMidi = midiValues.length ? Math.min(...midiValues) : bassMidiForOffset(0);
+        const maxMidi = midiValues.length ? Math.max(...midiValues) : bassMidiForOffset(12);
+        const midiRange = Math.max(1, maxMidi - minMidi);
+        roll.replaceChildren();
+        events.forEach((event) => {
+          const note = document.createElement("span");
+          note.className = "bassline-roll-note";
+          note.style.left = `${(event.tick / BASS_TICKS) * 100}%`;
+          note.style.width = `${Math.max(1.5, (event.length / BASS_TICKS) * 100)}%`;
+          note.style.top = `${80 - ((event.midi - minMidi) / midiRange) * 68}%`;
+          note.title = `${bassNoteLabel(event)} step ${bassEventStep(event) + 1}`;
+          roll.append(note);
+        });
+        if (state.playhead >= 0) {
+          const playhead = document.createElement("span");
+          playhead.className = "bassline-roll-playhead";
+          playhead.style.left = `${((state.playhead % STEPS) / STEPS) * 100}%`;
+          roll.append(playhead);
+        }
+      }
+
+      function renderBassEditor() {
+        const editor = document.querySelector("[data-bass-editor]");
+        if (!editor) return;
+        editor.replaceChildren();
+        const scene = currentScene();
+
+        const head = document.createElement("div");
+        head.className = "bass-editor-head";
+        head.innerHTML = `
+          <strong>Bass Editor</strong>
+          <span class="drum-pattern-help">Notes must match pattern starts exactly. x starts a note, _ sustains after a note, _ after silence starts the next note, and - rests.</span>
+        `;
+
+        const fields = document.createElement("div");
+        fields.className = "bass-editor-fields";
+        fields.innerHTML = Array.from({ length: BASS_EDITOR_PARTS }, (_, partIndex) => {
+          const tickOffset = partIndex * BASS_EDITOR_PART_TICKS;
+          const startStep = Math.floor(tickOffset / BASS_TICKS_PER_STEP) + 1;
+          const endStep = Math.floor((tickOffset + BASS_EDITOR_PART_TICKS - 1) / BASS_TICKS_PER_STEP) + 1;
+          return `
+            <section class="bass-editor-part" data-bass-editor-part="${partIndex}">
+              <div class="bass-editor-part-head">
+                <strong>Part ${partIndex + 1}</strong>
+                <span class="bass-editor-stats"></span>
+                <span class="drum-pattern-help">Steps ${startStep}-${endStep}</span>
+              </div>
+              <label>Notes
+                <span class="bass-text-overlay-wrap">
+                  <span class="bass-notes-preview bass-text-preview" aria-hidden="true"></span>
+                  <input class="bass-notes-input" data-tick-offset="${tickOffset}" value="${escapeAttr(formatBassNotes(scene.bass, partIndex))}" spellcheck="false" placeholder="c2 g2 bb2 a2" />
+                </span>
+              </label>
+              <label>Pattern
+                <span class="bass-text-overlay-wrap">
+                  <span class="bass-pattern-preview bass-text-preview" aria-hidden="true"></span>
+                  <input class="bass-pattern-input" value="${escapeAttr(formatBassPatternPart(scene.bass, partIndex))}" spellcheck="false" placeholder="x--- ---- x--- ----" />
+                </span>
+              </label>
+            </section>
+          `;
+        }).join("");
+
+        fields.querySelectorAll("[data-bass-editor-part]").forEach((part) => {
+          const tickOffset = Number(part.querySelector(".bass-notes-input").dataset.tickOffset) || 0;
+          const notesInput = part.querySelector(".bass-notes-input");
+          const notesPreview = part.querySelector(".bass-notes-preview");
+          const patternInput = part.querySelector(".bass-pattern-input");
+          const patternPreview = part.querySelector(".bass-pattern-preview");
+          const stats = part.querySelector(".bass-editor-stats");
+          const syncPreviewScroll = () => {
+            notesPreview.scrollLeft = notesInput.scrollLeft;
+            patternPreview.scrollLeft = patternInput.scrollLeft;
+          };
+          const syncEditor = () => {
+            updateBassEditorFromParts(fields);
+            renderBassNotesPreview(notesPreview, notesInput.value, patternInput.value, tickOffset, BASS_EDITOR_PART_TICKS);
+            renderBassEditorPreview(patternPreview, patternInput.value, tickOffset, BASS_EDITOR_PART_TICKS);
+            syncPreviewScroll();
+          };
+          notesInput.addEventListener("input", syncEditor);
+          notesInput.addEventListener("scroll", syncPreviewScroll);
+          notesInput.addEventListener("select", syncPreviewScroll);
+          patternInput.addEventListener("input", syncEditor);
+          patternInput.addEventListener("scroll", syncPreviewScroll);
+          patternInput.addEventListener("select", syncPreviewScroll);
+          updateBassEditorPartValidity(notesInput, patternInput, stats);
+          renderBassNotesPreview(notesPreview, notesInput.value, patternInput.value, tickOffset, BASS_EDITOR_PART_TICKS);
+          renderBassEditorPreview(patternPreview, patternInput.value, tickOffset, BASS_EDITOR_PART_TICKS);
+        });
+
+        editor.append(head, fields);
+      }
+
+      function bassActiveNoteIndex(rawPattern, activeTick, maxTicks = BASS_TICKS) {
+        const pattern = parseBassPattern(rawPattern, maxTicks) || [];
+        if (activeTick < 0) return -1;
+        if (activeTick >= pattern.length) return -1;
+        let hasActiveNote = false;
+        let noteIndex = -1;
+        for (let tick = 0; tick <= activeTick && tick < pattern.length; tick += 1) {
+          const symbol = pattern[tick];
+          if (symbol === "x" || symbol === "X" || (symbol === "_" && !hasActiveNote)) {
+            noteIndex += 1;
+            hasActiveNote = true;
+          } else if (symbol !== "_") {
+            hasActiveNote = false;
+          }
+        }
+        return hasActiveNote ? noteIndex : -1;
+      }
+
+      function renderBassNotesPreview(preview, rawNotes, rawPattern = formatBassPattern(currentScene().bass), tickOffset = 0, maxTicks = BASS_TICKS) {
+        if (!preview) return;
+        preview.replaceChildren();
+        const pattern = parseBassPattern(rawPattern, maxTicks);
+        const expectedNotes = pattern ? bassPatternNoteStartCount(pattern) : 0;
+        const bassPlayhead = state.playhead >= 0 ? state.playhead % STEPS : state.playhead;
+        const activeNoteIndex = bassActiveNoteIndex(rawPattern, bassPlayhead * BASS_TICKS_PER_STEP - tickOffset, maxTicks);
+        let noteIndex = 0;
+        const parts = String(rawNotes || "").match(/\s+|\S+/g) || [];
+        parts.forEach((part) => {
+          if (/^\s+$/.test(part)) {
+            preview.append(document.createTextNode(part));
+            return;
+          }
+          const cell = document.createElement("span");
+          cell.textContent = part;
+          if (!parseNoteName(part)) {
+            cell.classList.add("invalid");
+          } else if (noteIndex >= expectedNotes) {
+            cell.classList.add("extra");
+          } else {
+            cell.classList.add("on");
+          }
+          cell.classList.toggle("playing", noteIndex === activeNoteIndex);
+          preview.append(cell);
+          noteIndex += 1;
+        });
+      }
+
+      function renderBassEditorPreview(preview, rawPattern = formatBassPattern(currentScene().bass), tickOffset = 0, maxTicks = BASS_TICKS) {
+        if (!preview) return;
+        preview.replaceChildren();
+        const raw = String(rawPattern || "");
+        const bassPlayhead = state.playhead >= 0 ? state.playhead % STEPS : state.playhead;
+        const activeTick = bassPlayhead * BASS_TICKS_PER_STEP - tickOffset;
+        let hasActiveNote = false;
+        let tick = 0;
+        [...raw].forEach((char) => {
+          if (/[\s|]/.test(char)) {
+            preview.append(document.createTextNode(char));
+            return;
+          }
+          const cell = document.createElement("span");
+          cell.textContent = char;
+          const symbol = char === "." || char === "0" ? "-" : char;
+          if (symbol === "x" || symbol === "X" || (symbol === "_" && !hasActiveNote)) {
+            cell.classList.add(symbol === "X" ? "accent" : "on");
+            hasActiveNote = true;
+          } else if (symbol === "_") {
+            cell.classList.add("sustain");
+          } else if (symbol === "-") {
+            cell.classList.add("rest");
+            hasActiveNote = false;
+          }
+          cell.classList.toggle("playing", activeTick >= 0 && tick >= activeTick && tick < activeTick + BASS_TICKS_PER_STEP);
+          cell.ariaLabel = `Bass pattern tick ${tick + 1}${cell.classList.contains("playing") ? " playing" : ""}`;
+          preview.append(cell);
+          tick += 1;
+        });
+      }
+
+      function renderBassEditorPlayhead() {
+        document.querySelectorAll("[data-bass-editor-part]").forEach((part) => {
+          const notesInput = part.querySelector(".bass-notes-input");
+          const notesPreview = part.querySelector(".bass-notes-preview");
+          const patternInput = part.querySelector(".bass-pattern-input");
+          const preview = part.querySelector(".bass-pattern-preview");
+          const tickOffset = Number(notesInput?.dataset.tickOffset) || 0;
+          renderBassNotesPreview(notesPreview, notesInput?.value, patternInput?.value, tickOffset, BASS_EDITOR_PART_TICKS);
+          renderBassEditorPreview(preview, patternInput?.value, tickOffset, BASS_EDITOR_PART_TICKS);
+          if (notesPreview && notesInput) notesPreview.scrollLeft = notesInput.scrollLeft;
+          if (preview && patternInput) preview.scrollLeft = patternInput.scrollLeft;
+        });
+      }
+
+      function chordActivePoolIndex(rawPattern, activeStep, maxSteps = CHORD_EDITOR_PART_STEPS) {
+        const pattern = parseChordPattern(rawPattern, maxSteps) || [];
+        if (activeStep < 0 || activeStep >= pattern.length) return -1;
+        let hasActiveChord = false;
+        let chordIndex = -1;
+        for (let step = 0; step <= activeStep && step < pattern.length; step += 1) {
+          const symbol = pattern[step];
+          if (symbol === "x" || symbol === "X" || (symbol === "_" && !hasActiveChord)) {
+            chordIndex += 1;
+            hasActiveChord = true;
+          } else if (symbol !== "_") {
+            hasActiveChord = false;
+          }
+        }
+        return hasActiveChord ? chordIndex : -1;
+      }
+
+      function renderChordPoolPreview(preview, rawChords, rawPattern, stepOffset = 0, maxSteps = CHORD_EDITOR_PART_STEPS) {
+        if (!preview) return;
+        preview.replaceChildren();
+        const pattern = parseChordPattern(rawPattern, maxSteps);
+        const expectedChords = pattern ? chordPatternStats(pattern).pulses : 0;
+        const activeChordIndex = chordActivePoolIndex(rawPattern, state.playhead - stepOffset, maxSteps);
+        let chordIndex = 0;
+        const parts = String(rawChords || "").match(/\s+|\S+/g) || [];
+        parts.forEach((part) => {
+          if (/^\s+$/.test(part)) {
+            preview.append(document.createTextNode(part));
+            return;
+          }
+          const cell = document.createElement("span");
+          cell.textContent = part;
+          if (!parseChord(part)) {
+            cell.classList.add("invalid");
+          } else if (chordIndex >= expectedChords) {
+            cell.classList.add("extra");
+          } else {
+            cell.classList.add("on");
+          }
+          cell.classList.toggle("playing", chordIndex === activeChordIndex);
+          preview.append(cell);
+          chordIndex += 1;
+        });
+      }
+
+      function renderChordPatternPreview(preview, rawPattern, stepOffset = 0, maxSteps = CHORD_EDITOR_PART_STEPS) {
+        if (!preview) return;
+        preview.replaceChildren();
+        const raw = String(rawPattern || "");
+        const activeStep = state.playhead - stepOffset;
+        let hasActiveChord = false;
+        let step = 0;
+        [...raw].forEach((char) => {
+          if (/[\s|]/.test(char)) {
+            preview.append(document.createTextNode(char));
+            return;
+          }
+          const cell = document.createElement("span");
+          cell.textContent = char;
+          const symbol = char === "." || char === "0" ? "-" : char;
+          if (symbol === "x" || symbol === "X" || (symbol === "_" && !hasActiveChord)) {
+            cell.classList.add(symbol === "X" ? "accent" : "on");
+            hasActiveChord = true;
+          } else if (symbol === "_") {
+            cell.classList.add("sustain");
+          } else if (symbol === "-") {
+            cell.classList.add("rest");
+            hasActiveChord = false;
+          }
+          cell.classList.toggle("playing", activeStep === step);
+          preview.append(cell);
+          step += 1;
+        });
+      }
+
+      function updateChordEditorLayerValidity(layerEl) {
+        const poolInput = layerEl.querySelector(".chord-pool-input");
+        const patternInput = layerEl.querySelector(".chord-pattern-input");
+        const statsEl = layerEl.querySelector(".bass-editor-stats");
+        const chords = parseChordPool(poolInput.value);
+        const pattern = parseChordPattern(patternInput.value, CHORD_EDITOR_PART_STEPS);
+        const stats = pattern ? chordPatternStats(pattern) : { pulses: 0, sustains: 0, rests: 0, steps: 0 };
+        const invalidPool = chords === null || (pattern !== null && chords.length !== stats.pulses);
+        poolInput.classList.toggle("invalid", invalidPool);
+        poolInput.toggleAttribute("aria-invalid", invalidPool);
+        patternInput.classList.toggle("invalid", pattern === null);
+        patternInput.toggleAttribute("aria-invalid", pattern === null);
+        poolInput.title = invalidPool
+          ? `Enter exactly ${stats.pulses} chord${stats.pulses === 1 ? "" : "s"} for this pattern.`
+          : "";
+        patternInput.title = pattern === null
+          ? `Use X, x, _, and - for up to ${CHORD_EDITOR_PART_STEPS} steps. Spaces, ., and 0 are allowed separators/rests.`
+          : "";
+        if (statsEl) {
+          statsEl.textContent = `chords ${chords?.length ?? 0}/${stats.pulses} | pulses ${stats.pulses} | sustains ${stats.sustains} | rests ${stats.rests} | steps ${stats.steps}/${CHORD_EDITOR_PART_STEPS}`;
+        }
+        return {
+          layer: layerEl.dataset.chordLayer,
+          partIndex: Number(layerEl.closest("[data-chord-editor-part]")?.dataset.chordEditorPart) || 0,
+          slots: invalidPool || pattern === null ? null : chordPatternToSlots(poolInput.value, patternInput.value, CHORD_EDITOR_PART_STEPS),
+        };
+      }
+
+      function updateChordEditorFromParts(editor) {
+        const layerEls = [...editor.querySelectorAll("[data-chord-layer]")];
+        const results = layerEls.map(updateChordEditorLayerValidity);
+        if (results.some((result) => !result.slots)) return;
+        const scene = currentScene();
+        CHORD_EDITOR_LAYERS.forEach((layer) => {
+          const values = Array(CHORD_STEPS).fill("");
+          results
+            .filter((result) => result.layer === layer.key)
+            .forEach((result) => {
+              const stepOffset = result.partIndex * CHORD_EDITOR_PART_STEPS;
+              result.slots.forEach((value, index) => {
+                values[stepOffset + index] = value;
+              });
+            });
+          scene[layer.key] = values;
+        });
+        savePreset();
+        renderChordGrid();
+      }
+
+      function renderChordEditor() {
+        const editor = document.querySelector("[data-chord-editor]");
+        if (!editor) return;
+        editor.replaceChildren();
+        const scene = currentScene();
+        const head = document.createElement("div");
+        head.className = "bass-editor-head";
+        head.innerHTML = `
+          <strong>Chord/Harmony Pattern Editor</strong>
+          <span class="drum-pattern-help">Each layer uses a chord pool plus x/_/- pattern. Both halves must be valid before the grid updates.</span>
+        `;
+        const fields = document.createElement("div");
+        fields.className = "bass-editor-fields";
+        fields.innerHTML = Array.from({ length: CHORD_EDITOR_PARTS }, (_, partIndex) => {
+          const stepOffset = partIndex * CHORD_EDITOR_PART_STEPS;
+          const startStep = stepOffset + 1;
+          const endStep = stepOffset + CHORD_EDITOR_PART_STEPS;
+          const layerHtml = CHORD_EDITOR_LAYERS.map((layer) => `
+            <section data-chord-layer="${layer.key}">
+              <div class="bass-editor-part-head">
+                <strong>${layer.label}</strong>
+                <span class="bass-editor-stats"></span>
+              </div>
+              <label>Chords
+                <span class="bass-text-overlay-wrap">
+                  <span class="chord-pool-preview bass-text-preview" aria-hidden="true"></span>
+                  <input class="chord-pool-input" value="${escapeAttr(formatChordPoolPart(scene[layer.key], partIndex))}" spellcheck="false" placeholder="Dm G C Am" />
+                </span>
+              </label>
+              <label>Pattern
+                <span class="bass-text-overlay-wrap">
+                  <span class="chord-pattern-preview bass-text-preview" aria-hidden="true"></span>
+                  <input class="chord-pattern-input" value="${escapeAttr(formatChordPatternPart(scene[layer.key], partIndex))}" spellcheck="false" placeholder="x--- ---- x--- ----" />
+                </span>
+              </label>
+            </section>
+          `).join("");
+          return `
+            <section class="bass-editor-part" data-chord-editor-part="${partIndex}">
+              <div class="bass-editor-part-head">
+                <strong>Part ${partIndex + 1}</strong>
+                <span class="drum-pattern-help">Steps ${startStep}-${endStep}</span>
+              </div>
+              ${layerHtml}
+            </section>
+          `;
+        }).join("");
+        fields.querySelectorAll("[data-chord-layer]").forEach((layerEl) => {
+          const partEl = layerEl.closest("[data-chord-editor-part]");
+          const stepOffset = (Number(partEl?.dataset.chordEditorPart) || 0) * CHORD_EDITOR_PART_STEPS;
+          const poolInput = layerEl.querySelector(".chord-pool-input");
+          const poolPreview = layerEl.querySelector(".chord-pool-preview");
+          const patternInput = layerEl.querySelector(".chord-pattern-input");
+          const patternPreview = layerEl.querySelector(".chord-pattern-preview");
+          const syncPreviewScroll = () => {
+            poolPreview.scrollLeft = poolInput.scrollLeft;
+            patternPreview.scrollLeft = patternInput.scrollLeft;
+          };
+          const syncEditor = () => {
+            updateChordEditorFromParts(fields);
+            renderChordPoolPreview(poolPreview, poolInput.value, patternInput.value, stepOffset);
+            renderChordPatternPreview(patternPreview, patternInput.value, stepOffset);
+            syncPreviewScroll();
+          };
+          poolInput.addEventListener("input", syncEditor);
+          poolInput.addEventListener("scroll", syncPreviewScroll);
+          poolInput.addEventListener("select", syncPreviewScroll);
+          patternInput.addEventListener("input", syncEditor);
+          patternInput.addEventListener("scroll", syncPreviewScroll);
+          patternInput.addEventListener("select", syncPreviewScroll);
+          updateChordEditorLayerValidity(layerEl);
+          renderChordPoolPreview(poolPreview, poolInput.value, patternInput.value, stepOffset);
+          renderChordPatternPreview(patternPreview, patternInput.value, stepOffset);
+        });
+        editor.append(head, fields);
+      }
+
+      function renderChordEditorPlayhead() {
+        document.querySelectorAll("[data-chord-layer]").forEach((layerEl) => {
+          const partEl = layerEl.closest("[data-chord-editor-part]");
+          const stepOffset = (Number(partEl?.dataset.chordEditorPart) || 0) * CHORD_EDITOR_PART_STEPS;
+          const poolInput = layerEl.querySelector(".chord-pool-input");
+          const poolPreview = layerEl.querySelector(".chord-pool-preview");
+          const patternInput = layerEl.querySelector(".chord-pattern-input");
+          const patternPreview = layerEl.querySelector(".chord-pattern-preview");
+          renderChordPoolPreview(poolPreview, poolInput?.value, patternInput?.value, stepOffset);
+          renderChordPatternPreview(patternPreview, patternInput?.value, stepOffset);
+          if (poolPreview && poolInput) poolPreview.scrollLeft = poolInput.scrollLeft;
+          if (patternPreview && patternInput) patternPreview.scrollLeft = patternInput.scrollLeft;
         });
       }
 
@@ -2252,7 +3681,7 @@
         beatLabels.innerHTML = '<span class="beat-label-spacer" aria-hidden="true"></span>';
         const labelSteps = document.createElement("div");
         labelSteps.className = "step-grid";
-        for (let step = 0; step < STEPS; step += 1) {
+        for (let step = 0; step < DRUM_STEPS; step += 1) {
           const label = document.createElement("span");
           const subdivision = step % 4;
           label.className = "beat-label";
@@ -2262,6 +3691,36 @@
         }
         beatLabels.append(labelSteps);
         el.drumGrid.append(beatLabels);
+        const bassRow = document.createElement("div");
+        bassRow.className = "drum-row";
+        const bassHead = document.createElement("div");
+        bassHead.className = "track-head";
+        bassHead.innerHTML = `
+          <strong>Bass</strong>
+          <div class="bassline-roll" data-bassline-roll aria-hidden="true"></div>
+          <label class="track-mute-label">Mute <input type="checkbox" data-mute-bass ${scene.mutes?.bass ? "checked" : ""}></label>
+          <button type="button" data-open-bass-editor>Edit</button>
+          <button type="button" data-clear-bassline>Clear</button>
+        `;
+        bassHead.querySelector("[data-mute-bass]").addEventListener("change", (event) => {
+          scene.mutes.bass = event.target.checked;
+          savePreset();
+        });
+        bassHead.querySelector("[data-open-bass-editor]").addEventListener("click", openBassEditor);
+        bassHead.querySelector("[data-clear-bassline]").addEventListener("click", () => {
+          if (!scene.bass.length) return;
+          if (!window.confirm(`Clear bassline for ${scene.name}?`)) return;
+          scene.bass = [];
+          savePreset();
+          renderBassRoll();
+          renderBassEditor();
+        });
+        const bassHelp = document.createElement("div");
+        bassHelp.className = "bassline-help";
+        bassHelp.textContent = "Record mode overwrites the current fine pulse with the newest bass input.";
+        bassRow.append(bassHead, bassHelp);
+        el.drumGrid.append(bassRow);
+        renderBassRoll();
         TRACKS.forEach((track) => {
           const row = document.createElement("div");
           row.className = "drum-row";
@@ -2270,54 +3729,61 @@
           head.className = "track-head";
           head.innerHTML = `
             <strong>${track.label}</strong>
-            <input class="drum-pattern-input" value="${escapeAttr(formatDrumPattern(scene.drums[track.key]))}" aria-label="${track.label} text pattern" spellcheck="false" />
+            <span class="bass-text-overlay-wrap drum-pattern-overlay-wrap">
+              <span class="drum-pattern-preview bass-text-preview" aria-hidden="true"></span>
+              <input class="drum-pattern-input" value="${escapeAttr(formatDrumPattern(scene.drums[track.key]))}" aria-label="${track.label} text pattern" spellcheck="false" />
+            </span>
+            <label class="track-mute-label">Mute <input type="checkbox" data-mute-drum="${track.key}" ${scene.mutes?.drums?.[track.key] ? "checked" : ""}></label>
             <label class="track-label drum-volume-label">Vol <input type="range" min="0" max="1" step="0.01" value="${scene.trackVolumes[track.key]}"></label>
           `;
           const patternInput = head.querySelector(".drum-pattern-input");
-          patternInput.addEventListener("input", () => {
-            const parsed = parseDrumPattern(patternInput.value);
+          const patternPreview = head.querySelector(".drum-pattern-preview");
+          const patternWrap = head.querySelector(".drum-pattern-overlay-wrap");
+          const syncPatternPreviewScroll = () => {
+            patternPreview.scrollLeft = patternInput.scrollLeft;
+          };
+          const updatePatternPreview = () => {
+            renderDrumPatternPreview(patternPreview, patternInput.value);
+            syncPatternPreviewScroll();
+          };
+          const updatePatternValidity = (parsed) => {
             patternInput.classList.toggle("invalid", !parsed);
             patternInput.toggleAttribute("aria-invalid", !parsed);
-            patternInput.title = parsed ? "" : "Use x, _, and - in a 1, 2, 4, 8, 16, or 32 step pattern.";
+            patternWrap.classList.toggle("invalid", !parsed);
+            patternInput.title = parsed ? "" : "Use X, x, _, and - in a 1, 2, 4, 8, 16, or 32 step drum pattern.";
+          };
+          patternInput.addEventListener("input", () => {
+            const parsed = parseDrumPattern(patternInput.value);
+            updatePatternValidity(parsed);
+            updatePatternPreview();
             if (!parsed) return;
             scene.drums[track.key] = parsed;
             savePreset();
-            renderDrumGridCells();
           });
+          patternInput.addEventListener("scroll", syncPatternPreviewScroll);
+          patternInput.addEventListener("select", syncPatternPreviewScroll);
           patternInput.addEventListener("blur", () => {
             const parsed = parseDrumPattern(patternInput.value);
             if (!parsed) {
               patternInput.value = formatDrumPattern(scene.drums[track.key]);
-              patternInput.classList.remove("invalid");
-              patternInput.removeAttribute("aria-invalid");
-              patternInput.title = "";
-              return;
+              updatePatternValidity(parseDrumPattern(patternInput.value));
+            } else {
+              patternInput.value = formatDrumPattern(parsed);
+              updatePatternValidity(parsed);
             }
-            patternInput.value = formatDrumPattern(parsed);
+            updatePatternPreview();
+          });
+          updatePatternPreview();
+          head.querySelector("[data-mute-drum]").addEventListener("change", (event) => {
+            scene.mutes.drums[track.key] = event.target.checked;
+            savePreset();
           });
           head.querySelector(".track-label input").addEventListener("input", (event) => {
             scene.trackVolumes[track.key] = Number(event.target.value);
             savePreset();
           });
 
-          const steps = document.createElement("div");
-          steps.className = "step-grid";
-          for (let step = 0; step < STEPS; step += 1) {
-            const cell = document.createElement("div");
-            cell.className = "drum-cell";
-            cell.dataset.track = track.key;
-            cell.dataset.step = String(step);
-            cell.setAttribute("role", "img");
-            const drumValue = normalizeDrumValue(scene.drums[track.key][step]);
-            cell.classList.toggle("beat", step % 4 === 0);
-            cell.classList.toggle("on", drumValue === 1);
-            cell.classList.toggle("ghost", drumValue === 0.5);
-            cell.classList.toggle("playing", step === state.playhead);
-            cell.ariaLabel = `${track.label} step ${step + 1} ${drumValue === 1 ? "hit" : (drumValue === 0.5 ? "ghost" : "off")}`;
-            steps.append(cell);
-          }
-
-          row.append(head, steps);
+          row.append(head);
           el.drumGrid.append(row);
         });
       }
@@ -2328,7 +3794,7 @@
         if (!preset) return;
         const scene = currentScene();
         TRACKS.forEach((track) => {
-          scene.drums[track.key] = fixedLengthArray(preset[track.key], 0).map(normalizeDrumValue);
+          scene.drums[track.key] = drumLengthArray(preset[track.key]).map(normalizeDrumValue);
         });
         state.activeDrumPreset = { genre: genreKey, preset: presetName };
         state.drumPresetGenre = genreKey;
@@ -2372,7 +3838,7 @@
         if (!preset) return;
         const scene = currentScene();
         TRACKS.forEach((track) => {
-          scene.drums[track.key] = fixedLengthArray(preset.drums[track.key], 0).map(normalizeDrumValue);
+          scene.drums[track.key] = drumLengthArray(preset.drums[track.key]).map(normalizeDrumValue);
         });
         state.activeDrumPreset = { genre: "user", preset: preset.id };
         setBpm(preset.bpm);
@@ -2480,7 +3946,10 @@
       function renderPlayhead() {
         document.querySelectorAll(".playing").forEach((node) => node.classList.remove("playing"));
         document.querySelectorAll(`[data-step="${state.playhead}"]`).forEach((node) => node.classList.add("playing"));
-        renderDrumGridCells();
+        renderBassRoll();
+        renderBassEditorPlayhead();
+        renderChordEditorPlayhead();
+        renderDrumPatternPreviews();
       }
 
       function renderSoundOptions(select, options, currentValue) {
@@ -2500,8 +3969,22 @@
         TRACKS.forEach((track) => renderSoundOptions(el.drumSounds[track.key], Object.entries(DRUM_KIT_CATALOG), state.sounds.drums[track.key]));
       }
 
+      function renderBassControls() {
+        renderSoundOptions(el.bassPreset, Object.entries(BASS_PRESETS), state.bass.preset);
+        renderSoundOptions(el.bassShape, BASS_SHAPES.map((shape) => [shape, { label: shape }]), state.bass.layers[0].shape);
+        el.bassToggle.textContent = state.bass.enabled ? "Bass Keyboard On" : "Bass Keyboard Off";
+        el.bassToggle.classList.toggle("active", state.bass.enabled);
+        el.bassRecordToggle.textContent = state.bass.recording ? "Record Bass On" : "Record Bass Off";
+        el.bassRecordToggle.classList.toggle("active", state.bass.recording);
+        el.bassOctave.value = state.bass.octave;
+        el.bassVolume.value = state.bass.volume;
+        el.bassGlide.value = state.bass.glide;
+        el.bassRelease.value = state.bass.release;
+      }
+
       function renderAll() {
         renderSoundCatalog();
+        renderBassControls();
         renderChordPresetPanel();
         renderDrumPresetPanel();
         renderScenes();
@@ -2519,8 +4002,25 @@
       function shouldIgnoreTransportShortcut(event) {
         const target = event.target;
         if (!(target instanceof Element)) return false;
-        if (target.closest("textarea, select, button, dialog")) return true;
+        if (target.closest("textarea, select")) return true;
         return Boolean(target.closest("[contenteditable]"));
+      }
+
+      function shouldIgnoreSceneShortcut(event) {
+        const target = event.target;
+        if (!(target instanceof Element)) return false;
+        if (target.closest("input, textarea, select")) return true;
+        return Boolean(target.closest("[contenteditable]"));
+      }
+
+      function handleSceneShortcut(event) {
+        if (event.defaultPrevented || event.repeat || event.metaKey || event.ctrlKey || event.altKey) return;
+        if (shouldIgnoreSceneShortcut(event)) return;
+        if (!/^[0-9]$/.test(event.key)) return;
+        const sceneIndex = event.key === "0" ? 9 : Number(event.key) - 1;
+        if (!state.scenes[sceneIndex]) return;
+        event.preventDefault();
+        selectScene(sceneIndex, true);
       }
 
       function handleTransportShortcut(event) {
@@ -2535,9 +4035,58 @@
         }
       }
 
+      function toggleBassKeyboard(enabled = !state.bass.enabled) {
+        state.bass.enabled = Boolean(enabled);
+        if (!state.bass.enabled) releaseAllBassNotes();
+        savePreset();
+        renderBassControls();
+      }
+
+      function toggleBassRecording(enabled = !state.bass.recording) {
+        state.bass.recording = Boolean(enabled);
+        savePreset();
+        renderBassControls();
+      }
+
+      function setBassKeyPressed(code, pressed) {
+        const key = document.querySelector(`[data-bass-key="${code}"]`);
+        if (key) key.classList.toggle("pressed", pressed);
+      }
+
+      function handleBassKeyDown(event) {
+        if (!state.bass.enabled || event.repeat || event.defaultPrevented) return;
+        const offset = BASS_KEY_MAP.get(event.code);
+        if (offset === undefined) return;
+        event.preventDefault();
+        playBassNote(event.code, offset);
+      }
+
+      function handleBassKeyUp(event) {
+        if (!state.bass.enabled) return;
+        if (!BASS_KEY_MAP.has(event.code)) return;
+        event.preventDefault();
+        releaseBassNote(event.code);
+      }
+
       el.play.addEventListener("click", startPlayback);
       el.stop.addEventListener("click", () => stopPlayback());
-      document.addEventListener("keydown", handleTransportShortcut);
+      document.addEventListener("keydown", handleTransportShortcut, { capture: true });
+      document.addEventListener("keydown", handleSceneShortcut, { capture: true });
+      document.addEventListener("keydown", handleBassKeyDown);
+      document.addEventListener("keyup", handleBassKeyUp);
+      el.sceneLoopToggle.addEventListener("change", (event) => {
+        state.loopActiveScene = event.target.checked;
+        savePreset();
+      });
+      el.rhythmMute.addEventListener("change", (event) => {
+        currentScene().mutes.rhythm = event.target.checked;
+        savePreset();
+      });
+      el.harmonyMute.addEventListener("change", (event) => {
+        currentScene().mutes.harmony = event.target.checked;
+        if (event.target.checked) releaseHarmony(audioContext?.currentTime || 0);
+        savePreset();
+      });
       el.drumPresetsToggle.addEventListener("click", () => {
         state.drumPresetPanelOpen = !state.drumPresetPanelOpen;
         savePreset();
@@ -2558,6 +4107,48 @@
       el.padAttack.addEventListener("input", (event) => {
         state.padAttack = Number(event.target.value);
         savePreset();
+      });
+      el.bassToggle.addEventListener("click", () => toggleBassKeyboard());
+      el.bassRecordToggle.addEventListener("click", () => toggleBassRecording());
+      el.bassClear.addEventListener("click", () => {
+        const scene = currentScene();
+        if (!scene.bass.length) return;
+        if (!window.confirm(`Clear bassline for ${scene.name}?`)) return;
+        scene.bass = [];
+        savePreset();
+        renderBassRoll();
+        renderBassEditor();
+      });
+      el.bassPreset.addEventListener("change", (event) => applyBassPreset(event.target.value));
+      el.bassShape.addEventListener("change", (event) => {
+        state.bass.preset = "custom";
+        state.bass.layers = [{ ...state.bass.layers[0], shape: BASS_SHAPES.includes(event.target.value) ? event.target.value : "sine" }];
+        savePreset();
+        renderBassControls();
+      });
+      el.bassOctave.addEventListener("change", (event) => {
+        state.bass.octave = Math.trunc(clampNumber(event.target.value, 0, 4, state.bass.octave));
+        releaseAllBassNotes();
+        savePreset();
+        renderBassControls();
+        renderBassEditor();
+      });
+      el.bassVolume.addEventListener("input", (event) => {
+        state.bass.volume = clampNumber(event.target.value, 0, 1, state.bass.volume);
+        applyVolumes();
+        savePreset();
+      });
+      el.bassGlide.addEventListener("input", (event) => {
+        state.bass.preset = "custom";
+        state.bass.glide = clampNumber(event.target.value, 0, 0.2, state.bass.glide);
+        savePreset();
+        renderBassControls();
+      });
+      el.bassRelease.addEventListener("input", (event) => {
+        state.bass.preset = "custom";
+        state.bass.release = clampNumber(event.target.value, 0.04, 1, state.bass.release);
+        savePreset();
+        renderBassControls();
       });
       el.rhythmSound.addEventListener("change", async (event) => {
         state.sounds.rhythm = Object.prototype.hasOwnProperty.call(SOUND_CATALOG, event.target.value) ? event.target.value : "internal";
@@ -2616,6 +4207,11 @@
       el.soundOpen.addEventListener("click", openSoundCatalog);
       el.soundClose.addEventListener("click", closeSoundCatalog);
       el.soundDialog.addEventListener("cancel", closeSoundCatalog);
+      el.bassEditorClose.addEventListener("click", closeBassEditor);
+      el.bassEditorDialog.addEventListener("cancel", closeBassEditor);
+      el.chordEditorOpen.addEventListener("click", openChordEditor);
+      el.chordEditorClose.addEventListener("click", closeChordEditor);
+      el.chordEditorDialog.addEventListener("cancel", closeChordEditor);
       el.catalogOpen.addEventListener("click", openCatalog);
       el.catalogClose.addEventListener("click", closeCatalog);
       el.catalogAdd.addEventListener("click", () => addCatalogRow());
