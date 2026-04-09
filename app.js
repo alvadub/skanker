@@ -381,6 +381,8 @@
           record: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.2" fill="currentColor"/></svg>',
           settings: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.6 1.8h2.8l.4 1.6 1.3.5 1.4-.8 2 2-0.8 1.4.5 1.3 1.6.4v2.8l-1.6.4-.5 1.3.8 1.4-2 2-1.4-.8-1.3.5-.4 1.6H6.6l-.4-1.6-1.3-.5-1.4.8-2-2 .8-1.4-.5-1.3-1.6-.4V8.6l1.6-.4.5-1.3-.8-1.4 2-2 1.4.8 1.3-.5.4-1.6Z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.1"/><circle cx="8" cy="8" r="2.2" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>',
           clear: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 4.5 12.5 13.5M12.5 4.5 3.5 13.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.7"/></svg>',
+          undo: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6 2 8l2 2" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4"/><path d="M2 8h9a3 3 0 0 1 0 6H7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4"/></svg>',
+          mute: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.5" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>',
           notes: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.75 2.5v7.2a2 2 0 1 1-1.5-1.94V4.1l4-1.1v5.6a2 2 0 1 1-1.5-1.94V2.5l-1 .28Z" fill="currentColor"/></svg>',
           pattern: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.25 11.75V9.5m3-5.25v7.5m3-4.5v4.5m3-8.5v8.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/><path d="M1.5 13.25h13" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.2" opacity=".65"/></svg>',
         };
@@ -2434,6 +2436,38 @@
         renderShell();
       }
 
+      function undoDrumClear(trackKey) {
+        const scene = currentScene();
+        const pattern = drumUndoBuffer[trackKey];
+        if (!pattern) {
+          el.status.textContent = "Nothing to undo for " + trackKey;
+          return;
+        }
+        scene.drums[trackKey] = pattern;
+        delete drumUndoBuffer[trackKey];
+        applyVolumes();
+        savePreset();
+        renderDrumGrid();
+        el.status.textContent = "Undone " + trackKey;
+      }
+
+      function undoBassClear() {
+        const scene = currentScene();
+        if (!bassUndoBuffer) {
+          el.status.textContent = "Nothing to undo for bass";
+          return;
+        }
+        scene.bass = bassUndoBuffer;
+        scene.bassText = bassTextState(scene.bass);
+        bassUndoBuffer = null;
+        savePreset();
+        renderDrumGrid();
+        el.status.textContent = "Undone bass clear";
+      }
+
+      const drumUndoBuffer = {};
+      let bassUndoBuffer = null;
+
       function loadPreset() {
         applyPresetData(defaultProjectSnapshot());
         state.currentProjectId = null;
@@ -3783,8 +3817,9 @@
             <button type="button" class="icon-button compact-button ${state.bass.enabled ? "active" : ""}" data-bass-inline-toggle aria-label="Toggle bass keyboard" title="Bass keyboard">${uiIcon("power")}</button>
             <button type="button" class="icon-button compact-button record-button ${state.bass.recording ? "active" : ""}" data-bass-inline-record aria-label="Toggle bass recording" title="Record bass">${uiIcon("record")}</button>
             <button type="button" class="icon-button compact-button" data-open-bass-editor aria-label="Bass settings" title="Bass settings">${uiIcon("settings")}</button>
+            <button type="button" class="icon-button compact-button" data-undo-bass aria-label="Undo bass" title="Undo bass" ${!bassUndoBuffer ? "disabled" : ""}>${uiIcon("undo")}</button>
             <button type="button" class="icon-button compact-button danger" data-clear-bassline aria-label="Clear bassline" title="Clear bassline">${uiIcon("clear")}</button>
-            <label class="track-mute-label compact-track-toggle">Mute <input type="checkbox" data-mute-bass ${scene.mutes?.bass ? "checked" : ""}></label>
+            <button type="button" class="icon-button compact-button ${scene.mutes?.bass ? "active" : ""}" data-mute-bass aria-label="Mute bass" title="Mute bass">${uiIcon("mute")}</button>
           </div>
         `;
         const bassText = scene.bassText || bassTextState(scene.bass);
@@ -3812,8 +3847,9 @@
         `;
         const bassToggleButton = bassHead.querySelector("[data-bass-inline-toggle]");
         const bassRecordButton = bassHead.querySelector("[data-bass-inline-record]");
-        bassHead.querySelector("[data-mute-bass]").addEventListener("change", (event) => {
-          scene.mutes.bass = event.target.checked;
+        bassHead.querySelector("[data-undo-bass]").addEventListener("click", () => undoBassClear());
+        bassHead.querySelector("[data-mute-bass]").addEventListener("click", () => {
+          scene.mutes.bass = !scene.mutes?.bass;
           savePreset();
           applyVolumes();
           renderDrumGrid();
@@ -3824,6 +3860,7 @@
         bassHead.querySelector("[data-clear-bassline]").addEventListener("click", () => {
           if (!scene.bass.length) return;
           if (!confirmBlocking(`Clear bassline for ${scene.name}?`)) return;
+          bassUndoBuffer = [...scene.bass];
           scene.bass = [];
           scene.bassText = bassTextState(scene.bass);
           savePreset();
@@ -3877,8 +3914,10 @@
             <div class="track-surface">
               <div class="drum-roll" data-drum-roll="${track.key}" aria-hidden="true"></div>
             </div>
-            <div class="track-actions">
-              <label class="track-mute-label">Mute <input type="checkbox" data-mute-drum="${track.key}" ${scene.mutes?.drums?.[track.key] ? "checked" : ""}></label>
+          <div class="track-actions">
+              <button type="button" class="icon-button compact-button" data-undo-drum="${track.key}" title="Undo ${track.label}" aria-label="Undo ${track.label}" ${!drumUndoBuffer[track.key] ? "disabled" : ""}>${uiIcon("undo")}</button>
+              <button type="button" class="icon-button compact-button danger" data-clear-drum="${track.key}" title="Clear ${track.label}" aria-label="Clear ${track.label}">${uiIcon("clear")}</button>
+              <button type="button" class="icon-button compact-button ${scene.mutes?.drums?.[track.key] ? "active" : ""}" data-mute-drum="${track.key}" title="Mute ${track.label}" aria-label="Mute ${track.label}">${uiIcon("mute")}</button>
             </div>
           `;
           const editor = document.createElement("div");
@@ -3929,8 +3968,20 @@
             updatePatternPreview();
           });
           updatePatternPreview();
-          head.querySelector("[data-mute-drum]").addEventListener("change", (event) => {
-            scene.mutes.drums[track.key] = event.target.checked;
+          head.querySelector("[data-undo-drum]").addEventListener("click", () => {
+            undoDrumClear(track.key);
+          });
+          head.querySelector("[data-clear-drum]").addEventListener("click", () => {
+            const pattern = scene.drums[track.key];
+            if (!pattern || pattern.every(v => !v)) return;
+            if (!confirmBlocking(`Clear ${track.label} for ${scene.name}?`)) return;
+            drumUndoBuffer[track.key] = [...pattern];
+            scene.drums[track.key] = Array(pattern.length).fill(null);
+            savePreset();
+            renderDrumGrid();
+          });
+          head.querySelector("[data-mute-drum]").addEventListener("click", () => {
+            scene.mutes.drums[track.key] = !scene.mutes?.drums?.[track.key];
             savePreset();
             applyVolumes();
             renderDrumGrid();
