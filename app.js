@@ -4203,13 +4203,13 @@
           button.setAttribute("aria-selected", String(state.uiMode === mode));
         });
 
-        el.songTitleDisplay.textContent = state.songTitle;
-        if (el.songTitleInput.textContent !== state.songTitle) el.songTitleInput.textContent = state.songTitle;
-        el.songTitleInput.contentEditable = String(state.uiMode === "edit");
-        el.songSubtitle.textContent = currentSongSubtitle();
-        el.songNoteDisplay.textContent = state.songNote || "Add a composer note for collaborators.";
-        if (el.songNoteInput.textContent !== state.songNote) el.songNoteInput.textContent = state.songNote;
-        el.songNoteInput.contentEditable = String(state.uiMode === "edit");
+        el.songTitleInput.value = state.songTitle;
+        el.songTitleInput.readOnly = state.uiMode !== "edit";
+        el.songTitleInput.setCustomValidity(state.songTitle.trim() ? "" : "Song title is required");
+        el.songNoteInput.value = state.songNote || "";
+        el.songNoteInput.readOnly = state.uiMode !== "edit";
+        el.songNoteInput.style.height = "auto";
+        el.songNoteInput.style.height = el.songNoteInput.scrollHeight + "px";
         el.writeDub.value = exportDubText();
         el.mixerOpen.classList.toggle("active", el.mixerDialog.hasAttribute("open"));
         renderProjectState();
@@ -4282,7 +4282,7 @@
       function shouldIgnoreTransportShortcut(event) {
         const target = event.target;
         if (!(target instanceof Element)) return false;
-        if (target.closest("textarea, select")) return true;
+        if (target.closest("input, textarea, select")) return true;
         return Boolean(target.closest("[contenteditable]"));
       }
 
@@ -4327,6 +4327,8 @@
 
       function handleBassKeyDown(event) {
         if (!state.bass.enabled || event.repeat || event.defaultPrevented) return;
+        const target = event.target;
+        if (target instanceof Element && target.closest("input, textarea")) return;
         const offset = BASS_KEY_MAP.get(event.code);
         if (offset === undefined) return;
         event.preventDefault();
@@ -4335,6 +4337,8 @@
 
       function handleBassKeyUp(event) {
         if (!state.bass.enabled) return;
+        const target = event.target;
+        if (target instanceof Element && target.closest("input, textarea")) return;
         if (!BASS_KEY_MAP.has(event.code)) return;
         event.preventDefault();
         releaseBassNote(event.code);
@@ -4349,25 +4353,29 @@
       el.mixerClose.addEventListener("click", closeMixer);
       el.mixerDialog.addEventListener("close", renderShell);
       el.songTitleInput.addEventListener("input", () => {
-        state.songTitle = el.songTitleInput.textContent.trim() || "Untitled SKNKR";
-        el.songTitleDisplay.textContent = state.songTitle;
+        state.songTitle = el.songTitleInput.value;
         savePreset();
       });
       el.songTitleInput.addEventListener("blur", () => {
-        state.songTitle = el.songTitleInput.textContent.trim() || "Untitled SKNKR";
-        el.songTitleInput.textContent = state.songTitle;
-        el.songTitleDisplay.textContent = state.songTitle;
+        const value = el.songTitleInput.value;
+        const trimmed = value.trim();
+        state.songTitle = trimmed;
+        el.songTitleInput.setCustomValidity(trimmed ? "" : "Song title is required");
+        el.songTitleInput.value = value;
         savePreset();
       });
       el.songNoteInput.addEventListener("input", () => {
-        state.songNote = el.songNoteInput.textContent.trim();
-        el.songNoteDisplay.textContent = state.songNote || "Add a composer note for collaborators.";
+        state.songNote = el.songNoteInput.value;
+        el.songNoteInput.style.height = "auto";
+        el.songNoteInput.style.height = el.songNoteInput.scrollHeight + "px";
         savePreset();
       });
       el.songNoteInput.addEventListener("blur", () => {
-        state.songNote = el.songNoteInput.textContent.trim();
-        el.songNoteInput.textContent = state.songNote;
-        el.songNoteDisplay.textContent = state.songNote || "Add a composer note for collaborators.";
+        const value = el.songNoteInput.value;
+        state.songNote = value.trim();
+        el.songNoteInput.value = value;
+        el.songNoteInput.style.height = "auto";
+        el.songNoteInput.style.height = el.songNoteInput.scrollHeight + "px";
         savePreset();
       });
       el.shareLink.addEventListener("click", () => {

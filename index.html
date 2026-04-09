@@ -54,9 +54,8 @@
           </div>
         </div>
         <div class="hero-copy">
-          <div id="song-title-display" class="hero-title-display">SKNKR</div>
-          <div id="song-title-input" class="hero-title-input" contenteditable="true" spellcheck="false" role="textbox" aria-label="Song title"></div>
-          <p id="song-subtitle" class="hero-subtitle">Two-bar browser sequencer for chord chops, sustained harmony, and drum grooves.</p>
+          <input type="text" id="song-title-input" class="hero-title-input" spellcheck="false" aria-label="Song title" placeholder="Song title is required" readonly>
+          <p id="song-subtitle" class="hero-subtitle">Two-bar browser sequencer for groove, chords, and arrangement review.</p>
           <div class="hero-tags">
             <span class="hero-tag">32 pulses</span>
             <span class="hero-tag">DUB export</span>
@@ -65,8 +64,7 @@
         </div>
       </header>
       <section class="hero-note-card">
-        <div id="song-note-display" class="hero-note-display">Live dub sketch for groove, chords, and arrangement review.</div>
-        <div id="song-note-input" class="hero-note-input" contenteditable="true" spellcheck="true" role="textbox" aria-label="Composer note" data-placeholder="Add a composer note for collaborators..."></div>
+        <textarea id="song-note-input" class="hero-note-input" spellcheck="true" aria-label="Composer note" placeholder="Add a note..." readonly></textarea>
       </section>
 
       <div class="workspace">
