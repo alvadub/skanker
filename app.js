@@ -3,7 +3,14 @@ import {
   clampNumber, fixedLengthArray, normalizeDrumValue, drumLengthArray, drumValueToSymbol,
   encodeChordRle, decodeChordRle, encodeDrumTrack, decodeDrumTrack,
 } from "./codec.js";
-import { utf8ToBase64Url, base64UrlToUtf8, isDefaultSceneName, collectIndexed } from "./skt.js";
+import {
+  utf8ToBase64Url, base64UrlToUtf8, isDefaultSceneName, collectIndexed,
+  encodeHeader as sktEncodeHeader, decodeHeader as sktDecodeHeader,
+  encodeScene, decodeScene,
+  TRACKS, hasCustomTrackVolumes,
+  parseBassNotes, parseBassPattern, formatBassPattern, formatBassPatternSymbols,
+  sortAndTrimBassEvents, bassPatternStats, bassPatternToEvents,
+} from "./skt.js";
 
       const LOOP_STEPS = STEPS;
       const INITIAL_SCENE_COUNT = 4;
@@ -17,13 +24,6 @@ import { utf8ToBase64Url, base64UrlToUtf8, isDefaultSceneName, collectIndexed } 
         { key: "rhythm", label: "Rhythm" },
         { key: "harmony", label: "Harmony" },
       ];
-      const TRACKS = [
-        { key: "kick", label: "Kick", volume: 0.9 },
-        { key: "snare", label: "Snare", volume: 0.75 },
-        { key: "hihat", label: "Hi-hat", volume: 0.45 },
-        { key: "openhat", label: "Open HH", volume: 0.55 },
-      ];
-
       const ROOTS = {
         C: 0, "C#": 1, Db: 1, D: 2, "D#": 3, Eb: 3, E: 4, F: 5,
         "F#": 6, Gb: 6, G: 7, "G#": 8, Ab: 8, A: 9, "A#": 10, Bb: 10, B: 11,
@@ -607,13 +607,6 @@ import { utf8ToBase64Url, base64UrlToUtf8, isDefaultSceneName, collectIndexed } 
         return normalizeChordCatalog(parsed);
       }
 
-      function hasCustomTrackVolumes(scene) {
-        return TRACKS.some((track) => {
-          const currentVolume = clampNumber(scene.trackVolumes?.[track.key], 0, 1, track.volume);
-          return Math.round(currentVolume * 100) !== Math.round(track.volume * 100);
-        });
-      }
-
       function loadScriptOnce(src) {
         const existing = document.querySelector(`script[src="${src}"]`);
         if (existing) {
@@ -1119,16 +1112,6 @@ import { utf8ToBase64Url, base64UrlToUtf8, isDefaultSceneName, collectIndexed } 
           .filter(Boolean));
       }
 
-      function sortAndTrimBassEvents(events) {
-        events.sort((left, right) => left.tick - right.tick);
-        events.forEach((event, index) => {
-          const nextEvent = events[index + 1];
-          const maxLength = nextEvent ? nextEvent.tick - event.tick : BASS_TICKS - event.tick;
-          event.length = Math.max(1, Math.min(event.length, maxLength));
-        });
-        return events;
-      }
-
       function bassNoteLabel(note) {
         if (!note) return "";
         const names = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
@@ -1147,13 +1130,6 @@ import { utf8ToBase64Url, base64UrlToUtf8, isDefaultSceneName, collectIndexed } 
         return String(value || "").match(/\s+|\S+/g) || [];
       }
 
-      function parseBassNotes(rawNotes) {
-        const tokens = splitWhitespacePreservingParts(rawNotes).filter((part) => !/^\s+$/.test(part));
-        if (!tokens.length) return [];
-        const notes = tokens.map(parseNoteName);
-        return notes.some((note) => !note) ? null : notes;
-      }
-
       function normalizeBassNotesText(rawNotes) {
         return splitWhitespacePreservingParts(rawNotes).map((part) => {
           if (/^\s+$/.test(part)) return part;
@@ -1170,72 +1146,6 @@ import { utf8ToBase64Url, base64UrlToUtf8, isDefaultSceneName, collectIndexed } 
         }).join("").trimEnd();
       }
 
-      function parseBassPattern(rawPattern, maxTicks = BASS_TICKS) {
-        const raw = String(rawPattern || "").trim();
-        if (!raw) return [];
-        if (/[^xX_\-\s|.0]/.test(raw)) return null;
-        const symbols = [...raw.replace(/[\s|]/g, "").replace(/[.0]/g, "-")];
-        if (!symbols.length || symbols.length > maxTicks) return null;
-        return symbols;
-      }
-
-      function bassPatternNoteStartCount(pattern) {
-        return bassPatternStats(pattern).pulses;
-      }
-
-      function bassPatternStats(pattern) {
-        const stats = { pulses: 0, sustains: 0, rests: 0, ticks: pattern.length };
-        let hasActiveNote = false;
-        pattern.forEach((symbol) => {
-          if (symbol === "x" || symbol === "X" || (symbol === "_" && !hasActiveNote)) {
-            stats.pulses += 1;
-            hasActiveNote = true;
-            return;
-          }
-          if (symbol === "_") {
-            stats.sustains += 1;
-            return;
-          }
-          stats.rests += 1;
-          hasActiveNote = false;
-        });
-        return stats;
-      }
-
-      function bassPatternToEvents(rawNotes, rawPattern, tickOffset = 0, maxTicks = BASS_TICKS) {
-        const notes = parseBassNotes(rawNotes);
-        const pattern = parseBassPattern(rawPattern, maxTicks);
-        if (!notes || !pattern) return null;
-        if (notes.length !== bassPatternNoteStartCount(pattern)) return null;
-        const events = [];
-        let noteIndex = 0;
-        let currentEvent = null;
-        pattern.forEach((symbol, tick) => {
-          if (symbol === "x" || symbol === "X" || (symbol === "_" && !currentEvent)) {
-            const note = notes[noteIndex];
-            if (!note) return;
-            currentEvent = { tick: tickOffset + tick, midi: note.midi, length: 1, velocity: 1, code: "" };
-            events.push(currentEvent);
-            noteIndex += 1;
-            return;
-          }
-          if (symbol === "_" && currentEvent) {
-            currentEvent.length += 1;
-            return;
-          }
-          currentEvent = null;
-        });
-        return sortAndTrimBassEvents(events);
-      }
-
-      function formatBassPattern(events) {
-        const symbols = Array(BASS_TICKS).fill("-");
-        normalizeBassEvents(events).forEach((event) => {
-          symbols[event.tick] = "x";
-        });
-        return formatBassPatternSymbols(symbols);
-      }
-
       function formatBassPatternPart(events, partIndex) {
         const tickOffset = partIndex * BASS_EDITOR_PART_TICKS;
         const symbols = Array(BASS_EDITOR_PART_TICKS).fill("-");
@@ -1245,14 +1155,6 @@ import { utf8ToBase64Url, base64UrlToUtf8, isDefaultSceneName, collectIndexed } 
             symbols[event.tick - tickOffset] = "x";
           });
         return formatBassPatternSymbols(symbols);
-      }
-
-      function formatBassPatternSymbols(symbols) {
-        const groups = [];
-        for (let index = 0; index < symbols.length; index += BASS_TICKS_PER_STEP) {
-          groups.push(symbols.slice(index, index + BASS_TICKS_PER_STEP).join(""));
-        }
-        return groups.join(" ");
       }
 
       function formatBassNotes(events, partIndex = null) {
@@ -2482,138 +2384,16 @@ import { utf8ToBase64Url, base64UrlToUtf8, isDefaultSceneName, collectIndexed } 
       }
 
       function encodeHeader() {
-        const tokens = [];
-        const title = String(state.songTitle || "").trim();
-        const meta = [`t${state.bpm}`];
-        if (title && title !== "Untitled Project") meta.push(String(CHORD_STEPS), utf8ToBase64Url(title));
-        else if (CHORD_STEPS !== 32) meta.push(String(CHORD_STEPS));
-        tokens.push(meta.join("."));
-
-        const drumSounds = TRACKS.map((track) => state.sounds.drums[track.key]);
-        const drumToken = drumSounds.every((value) => value === drumSounds[0])
-          ? drumSounds[0]
-          : drumSounds.join("-");
-        if (
-          state.sounds.rhythm !== "organ"
-          || state.sounds.harmony !== "pad"
-          || drumSounds.some((value) => value !== "internal")
-          || state.bass.preset !== "sub"
-        ) {
-          tokens.push(`k${state.sounds.rhythm}.${state.sounds.harmony}.${drumToken}.${state.bass.preset}`);
-        }
-
-        const mixValues = [
-          Math.round(state.volumes.master * 100),
-          Math.round(state.volumes.rhythm * 100),
-          Math.round(state.volumes.harmony * 100),
-          Math.round(state.volumes.drums * 100),
-          Math.round(state.bass.volume * 100),
-        ];
-        const mixIsDefault = mixValues.join(".") === "80.55.35.75.65";
-        const timings = [Math.round(state.strumLength * 100), Math.round(state.padAttack * 100)];
-        if (!mixIsDefault || timings[0] !== 12 || timings[1] !== 8) {
-          tokens.push(`m${mixValues.join(".")}${timings[0] === 12 && timings[1] === 8 ? "" : `.${timings.join(".")}`}`);
-        }
-
-        const bassDefaults = {
-          enabled: false,
-          preset: "sub",
-          octave: 2,
-          filter: 420,
-          glide: 4,
-          release: 22,
-        };
-        const bassValues = {
-          enabled: state.bass.enabled ? 1 : 0,
-          preset: state.bass.preset,
-          octave: state.bass.octave,
-          filter: Math.round(state.bass.filter),
-          glide: Math.round(state.bass.glide * 100),
-          release: Math.round(state.bass.release * 100),
-        };
-        if (
-          bassValues.enabled !== Number(bassDefaults.enabled)
-          || bassValues.preset !== bassDefaults.preset
-          || bassValues.octave !== bassDefaults.octave
-          || bassValues.filter !== bassDefaults.filter
-          || bassValues.glide !== bassDefaults.glide
-          || bassValues.release !== bassDefaults.release
-        ) {
-          tokens.push(`b${bassValues.enabled}.${bassValues.preset}.${bassValues.octave}.${bassValues.filter}.${bassValues.glide}.${bassValues.release}`);
-        }
-
+        let result = sktEncodeHeader(state);
         if (chordCatalogSignature(state.chordCatalog) !== chordCatalogSignature(DEFAULT_CHORD_CATALOG)) {
-          tokens.push(`c${encodeChordCatalogPayload(state.chordCatalog)}`);
+          result += `,c${encodeChordCatalogPayload(state.chordCatalog)}`;
         }
-
-        return tokens.join(",");
+        return result;
       }
 
       function decodeHeader(token) {
-        const snapshot = {};
+        const snapshot = sktDecodeHeader(token);
         String(token || "").split(",").forEach((part) => {
-          if (!part) return;
-          if (part.startsWith("t")) {
-            const fields = part.slice(1).split(".");
-            const bpm = Math.trunc(clampNumber(fields[0], 60, 200, 100));
-            snapshot.bpm = bpm;
-            if (fields.length >= 3 && fields[2]) {
-              try {
-                snapshot.songTitle = base64UrlToUtf8(fields[2]).trim();
-              } catch (error) {
-                console.warn("Could not decode shared title", error);
-              }
-            }
-            return;
-          }
-          if (part.startsWith("k")) {
-            const [rhythm, harmony, drumToken, bassPreset] = part.slice(1).split(".");
-            const drums = {};
-            const drumValues = String(drumToken || "").split("-");
-            TRACKS.forEach((track, index) => {
-              const candidate = drumValues.length === TRACKS.length ? drumValues[index] : drumValues[0];
-              drums[track.key] = Object.prototype.hasOwnProperty.call(DRUM_KIT_CATALOG, candidate) ? candidate : "internal";
-            });
-            snapshot.sounds = {
-              rhythm: Object.prototype.hasOwnProperty.call(SOUND_CATALOG, rhythm) ? rhythm : "organ",
-              harmony: Object.prototype.hasOwnProperty.call(SOUND_CATALOG, harmony) ? harmony : "pad",
-              drums,
-            };
-            snapshot.bass = {
-              ...(snapshot.bass || {}),
-              preset: Object.prototype.hasOwnProperty.call(BASS_PRESETS, bassPreset) ? bassPreset : "sub",
-            };
-            return;
-          }
-          if (part.startsWith("m")) {
-            const [master, rhythm, harmony, drums, bass, strumLength, padAttack] = part.slice(1).split(".");
-            snapshot.volumes = {
-              master: clampNumber(Number(master) / 100, 0, 1, 0.8),
-              rhythm: clampNumber(Number(rhythm) / 100, 0, 1, 0.55),
-              harmony: clampNumber(Number(harmony) / 100, 0, 1, 0.35),
-              drums: clampNumber(Number(drums) / 100, 0, 1, 0.75),
-            };
-            snapshot.bass = {
-              ...(snapshot.bass || {}),
-              volume: clampNumber(Number(bass) / 100, 0, 1, 0.65),
-            };
-            if (strumLength !== undefined) snapshot.strumLength = clampNumber(Number(strumLength) / 100, 0.05, 0.25, 0.12);
-            if (padAttack !== undefined) snapshot.padAttack = clampNumber(Number(padAttack) / 100, 0.02, 0.4, 0.08);
-            return;
-          }
-          if (part.startsWith("b")) {
-            const [enabled, preset, octave, filter, glide, release] = part.slice(1).split(".");
-            snapshot.bass = {
-              ...(snapshot.bass || {}),
-              enabled: enabled === "1",
-              preset: Object.prototype.hasOwnProperty.call(BASS_PRESETS, preset) ? preset : (snapshot.bass?.preset || "sub"),
-              octave: Math.trunc(clampNumber(octave, 0, 4, 2)),
-              filter: clampNumber(filter, 120, 1800, 420),
-              glide: clampNumber(Number(glide) / 100, 0, 0.2, 0.04),
-              release: clampNumber(Number(release) / 100, 0.04, 1, 0.22),
-            };
-            return;
-          }
           if (part.startsWith("c")) {
             try {
               snapshot.chordCatalog = decodeChordCatalogPayload(part.slice(1));
@@ -2625,117 +2405,11 @@ import { utf8ToBase64Url, base64UrlToUtf8, isDefaultSceneName, collectIndexed } 
         return snapshot;
       }
 
-      function encodeScene(scene) {
-        const normalizedScene = normalizeScene(scene, 0);
-        const parts = [
-          encodeChordRle(normalizedScene.rhythm),
-          encodeChordRle(normalizedScene.harmony),
-          TRACKS.map((track) => encodeDrumTrack(normalizedScene.drums[track.key])).join(":"),
-        ];
-        if (normalizedScene.bass.length) {
-          const notes = utf8ToBase64Url(formatBassNotes(normalizedScene.bass));
-          const pattern = formatBassPattern(normalizedScene.bass).replace(/\s+/g, "");
-          parts.push(`${notes}:${pattern}`);
-        }
-        let muteBits = 0;
-        if (normalizedScene.mutes.rhythm) muteBits |= 1 << 0;
-        if (normalizedScene.mutes.harmony) muteBits |= 1 << 1;
-        if (normalizedScene.mutes.bass) muteBits |= 1 << 2;
-        TRACKS.forEach((track, index) => {
-          if (normalizedScene.mutes.drums[track.key]) muteBits |= 1 << (index + 3);
-        });
-        if (muteBits) parts.push(muteBits.toString(16));
-        if (hasCustomTrackVolumes(normalizedScene)) {
-          parts.push(`v${TRACKS.map((track) => Math.round(clampNumber(normalizedScene.trackVolumes[track.key], 0, 1, track.volume) * 100)).join("-")}`);
-        }
-        if (!isDefaultSceneName(normalizedScene.name)) {
-          parts.push(`n${utf8ToBase64Url(normalizedScene.name.trim())}`);
-        }
-        return parts.join(".");
-      }
-
-      function decodeScene(token, index) {
-        const parts = String(token || "").split(".");
-        const [rhythmRle = "-", harmonyRle = "-", drumsEnc = "(-)32:(-)32:(-)32:(-)32", ...extraParts] = parts;
-        let bassEnc = "";
-        let mutesHex = "";
-        let volumeToken = "";
-        let nameToken = "";
-        extraParts.forEach((part) => {
-          if (!part) return;
-          if (!bassEnc && part.includes(":")) {
-            bassEnc = part;
-            return;
-          }
-          if (!volumeToken && part.startsWith("v")) {
-            volumeToken = part.slice(1);
-            return;
-          }
-          if (!nameToken && part.startsWith("n")) {
-            nameToken = part.slice(1);
-            return;
-          }
-          if (!mutesHex && /^[0-9a-f]+$/i.test(part)) mutesHex = part;
-        });
-        const drumParts = drumsEnc.split(":");
-        const bassParts = bassEnc ? bassEnc.split(":") : [];
-        let bassNotes = "";
-        if (bassParts[0]) {
-          try {
-            bassNotes = base64UrlToUtf8(bassParts[0]);
-          } catch (error) {
-            console.warn("Could not decode shared bass notes", error);
-          }
-        }
-        const bassPattern = bassParts[1] || "";
-        const bassEvents = bassNotes && bassPattern ? (bassPatternToEvents(bassNotes, bassPattern) || []) : [];
-        const muteValue = Number.parseInt(mutesHex || "0", 16) || 0;
-        let sceneName;
-        if (nameToken) {
-          try {
-            const decodedName = base64UrlToUtf8(nameToken).trim();
-            if (decodedName) sceneName = decodedName;
-          } catch (error) {
-            console.warn("Could not decode shared scene name", error);
-          }
-        }
-        const trackVolumes = volumeToken
-          ? Object.fromEntries(TRACKS.map((track, trackIndex) => {
-            const volumeParts = volumeToken.split("-");
-            return [
-              track.key,
-              clampNumber(Number(volumeParts[trackIndex]) / 100, 0, 1, track.volume),
-            ];
-          }))
-          : undefined;
-        return normalizeScene({
-          name: sceneName,
-          rhythm: decodeChordRle(rhythmRle),
-          harmony: decodeChordRle(harmonyRle),
-          bass: bassEvents,
-          bassText: bassNotes || bassPattern ? { notes: bassNotes, pattern: bassPattern } : undefined,
-          drums: Object.fromEntries(TRACKS.map((track, trackIndex) => [
-            track.key,
-            decodeDrumTrack(drumParts[trackIndex] || "(-)32"),
-          ])),
-          mutes: {
-            rhythm: Boolean(muteValue & (1 << 0)),
-            harmony: Boolean(muteValue & (1 << 1)),
-            bass: Boolean(muteValue & (1 << 2)),
-            drums: Object.fromEntries(TRACKS.map((track, trackIndex) => [
-              track.key,
-              Boolean(muteValue & (1 << (trackIndex + 3))),
-            ])),
-          },
-          trackVolumes,
-        }, index);
-      }
-
       function currentShareUrlV2() {
         const url = new URL(`${window.location.origin}${window.location.pathname}`);
         url.searchParams.set("s", encodeHeader());
         state.scenes.forEach((scene, index) => {
-          url.searchParams.set(`s[${index}]`, encodeScene(scene));
+          url.searchParams.set(`s[${index}]`, encodeScene(scene, index));
         });
         return url.toString();
       }
@@ -3907,7 +3581,7 @@ import { utf8ToBase64Url, base64UrlToUtf8, isDefaultSceneName, collectIndexed } 
         if (!preview) return;
         preview.replaceChildren();
         const pattern = parseBassPattern(rawPattern, maxTicks);
-        const expectedNotes = pattern ? bassPatternNoteStartCount(pattern) : 0;
+        const expectedNotes = pattern ? bassPatternStats(pattern).pulses : 0;
         const bassPlayhead = state.playhead >= 0 ? state.playhead % STEPS : state.playhead;
         const activeNoteIndex = bassActiveNoteIndex(rawPattern, bassPlayhead * BASS_TICKS_PER_STEP - tickOffset, maxTicks);
         let noteIndex = 0;

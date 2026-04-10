@@ -18,11 +18,16 @@ export {
   decodeScene,
   // v1 migration
   decodeV1Payload,
-  // bass helpers (useful for testing)
+  // bass helpers
   normalizeBassEvents,
   formatBassNotes,
   formatBassPattern,
+  formatBassPatternSymbols,
   bassPatternToEvents,
+  bassPatternStats,
+  parseBassNotes,
+  parseBassPattern,
+  sortAndTrimBassEvents,
   // misc
   collectIndexed,
   isDefaultSceneName,
@@ -50,7 +55,7 @@ const BASS_TICKS_PER_STEP = 4;
 const BASS_TICKS = STEPS * BASS_TICKS_PER_STEP;
 
 const TRACKS = [
-  { key: "kick",    label: "Kick",    volume: 1    },
+  { key: "kick",    label: "Kick",    volume: 0.9  },
   { key: "snare",   label: "Snare",   volume: 0.75 },
   { key: "hihat",   label: "Hi-hat",  volume: 0.45 },
   { key: "openhat", label: "Open HH", volume: 0.55 },
@@ -62,10 +67,10 @@ const SOUND_NAMES = new Set([
 ]);
 
 const DRUM_KIT_NAMES = new Set([
-  "internal", "standard", "room", "brush", "electronic", "tr808", "jazz",
+  "internal", "standard", "room", "brush", "power", "electronic", "tr808", "tr78", "cr8000", "jazz", "orchestra",
 ]);
 
-const BASS_PRESET_NAMES = new Set(["sub", "dub", "rubber", "custom"]);
+const BASS_PRESET_NAMES = new Set(["sub", "dub", "rubber", "square", "custom"]);
 
 const NOTE_ROOTS = {
   C: 0, "C#": 1, Db: 1, D: 2, "D#": 3, Eb: 3, E: 4, F: 5,
@@ -206,9 +211,9 @@ function bassPatternStats(pattern) {
   return stats;
 }
 
-function bassPatternToEvents(rawNotes, rawPattern) {
+function bassPatternToEvents(rawNotes, rawPattern, tickOffset = 0, maxTicks = BASS_TICKS) {
   const notes = parseBassNotes(rawNotes);
-  const pattern = parseBassPattern(rawPattern, BASS_TICKS);
+  const pattern = parseBassPattern(rawPattern, maxTicks);
   if (!notes || !pattern) return null;
   if (notes.length !== bassPatternStats(pattern).pulses) return null;
   const events = [];
@@ -218,7 +223,7 @@ function bassPatternToEvents(rawNotes, rawPattern) {
     if (symbol === "x" || symbol === "X" || (symbol === "_" && !currentEvent)) {
       const note = notes[noteIndex];
       if (!note) return;
-      currentEvent = { tick, midi: note.midi, length: 1, velocity: 1, code: "" };
+      currentEvent = { tick: tickOffset + tick, midi: note.midi, length: 1, velocity: 1, code: "" };
       events.push(currentEvent);
       noteIndex += 1;
     } else if (symbol === "_" && currentEvent) {
