@@ -16,6 +16,8 @@ export {
   // scene
   encodeScene,
   decodeScene,
+  // v1 migration
+  decodeV1Payload,
   // bass helpers (useful for testing)
   normalizeBassEvents,
   formatBassNotes,
@@ -448,6 +450,24 @@ function decodeHeader(token) {
     }
   });
   return snapshot;
+}
+
+// --- V1 migration ---
+
+/**
+ * Decodes a v1 share payload (base64url JSON `{v:1, p:{...}}`).
+ * Returns the preset snapshot, or null if the payload is not a valid v1 payload.
+ */
+function decodeV1Payload(encoded) {
+  try {
+    const parsed = JSON.parse(base64UrlToUtf8(encoded));
+    if (!parsed || typeof parsed !== "object") return null;
+    if (parsed.v !== 1) return null;
+    if (!parsed.p || typeof parsed.p !== "object") return null;
+    return parsed.p;
+  } catch {
+    return null;
+  }
 }
 
 // --- URL helpers ---

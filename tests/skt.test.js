@@ -2,10 +2,14 @@ import { describe, it, expect } from "bun:test";
 import {
   encodeHeader, decodeHeader,
   encodeScene, decodeScene,
+  decodeV1Payload,
   collectIndexed,
   normalizeBassEvents,
   TRACKS,
 } from "../skt.js";
+
+// Real RIDDIM v1 share URL payload (the base64 after #s=)
+const RIDDIM_V1 = "eyJ2IjoxLCJwIjp7InZlcnNpb24iOjEsInByZXNldE5hbWUiOiJkZWZhdWx0IiwidWlNb2RlIjoibGlzdGVuIiwic29uZ1RpdGxlIjoiUklERElNIiwic29uZ05vdGUiOiJMaXZlIGR1YiBza2V0Y2ggZm9yIGdyb292ZSwgY2hvcmRzLCBhbmQgYXJyYW5nZW1lbnQgcmV2aWV3LiIsImJwbSI6ODAsImN1cnJlbnRTY2VuZSI6MCwibG9vcEFjdGl2ZVNjZW5lIjpmYWxzZSwic3RydW1MZW5ndGgiOjAuMTMsInBhZEF0dGFjayI6MC4wOCwiZHJ1bVByZXNldFBhbmVsT3BlbiI6ZmFsc2UsImRydW1QcmVzZXRHZW5yZSI6InJlZ2dhZSIsImFjdGl2ZURydW1QcmVzZXQiOm51bGwsImNob3JkUHJlc2V0UGFuZWxPcGVuIjpmYWxzZSwiYWN0aXZlQ2hvcmRQcmVzZXQiOm51bGwsInNvdW5kcyI6eyJyaHl0aG0iOiJndWl0YXIiLCJoYXJtb255IjoiZ3VpdGFyIiwiZHJ1bXMiOnsia2ljayI6InN0YW5kYXJkIiwic25hcmUiOiJ0cjgwOCIsImhpaGF0Ijoic3RhbmRhcmQiLCJvcGVuaGF0IjoiamF6eiJ9fSwiYmFzcyI6eyJlbmFibGVkIjpmYWxzZSwicHJlc2V0IjoiY3VzdG9tIiwib2N0YXZlIjoyLCJ2b2x1bWUiOjAuNCwiZmlsdGVyIjozNjAsImdsaWRlIjowLjIsInJlbGVhc2UiOjAuMjUsInJlY29yZGluZyI6ZmFsc2UsImxheWVycyI6W3sic2hhcGUiOiJzYXd0b290aCIsImRldHVuZSI6MCwiZ2FpbiI6MX1dfSwidm9sdW1lcyI6eyJtYXN0ZXIiOjAuNjQsInJoeXRobSI6MC41NSwiaGFybW9ueSI6MC41NCwiZHJ1bXMiOjAuNjd9LCJjaG9yZENhdGFsb2ciOnsiQWIiOiJhYjQsZGI0LGU0IiwiQWRpbSI6ImEzLGM0LGViNCIsIkJtIjoiYjMsZDQsZiM0IiwiQyI6ImM0LGY0LGE0IiwiRGIiOiJkYjQsZjQsYTQiLCJEZGltIjoiZDQsZjQsYWI0IiwiRG0iOiJkNCxmNCxhNCIsIkRtL0MiOiJjNCxmNCxhNCIsIkRtL0RiIjoiZGI0LGY0LGE0In0sInNjZW5lcyI6W3sibmFtZSI6IklOVFJPIiwicmh5dGhtIjpbIiIsIiIsIkRtIiwiIiwiIiwiIiwiRG0iLCIiLCIiLCIiLCJEbSIsIiIsIiIsIiIsIkRtIiwiIiwiIiwiIiwiRG0iLCIiLCIiLCIiLCJEbSIsIiIsIiIsIiIsIkRtIiwiIiwiIiwiIiwiRGRpbSIsIiJdLCJoYXJtb255IjpbIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiIsIiJdLCJjaG9yZFBvb2xUZXh0Ijp7InJoeXRobSI6WyJEbSBEbSBEbSBEbSIsIkRtIERtIERtIERkaW0iXSwiaGFybW9ueSI6WyIiLCIiXX0sImJhc3MiOlt7InRpY2siOjAsIm1pZGkiOjM4LCJsZW5ndGgiOjEsInZlbG9jaXR5IjoxLCJjb2RlIjoiIn0seyJ0aWNrIjozMiwibWlkaSI6MzgsImxlbmd0aCI6MSwidmVsb2NpdHkiOjEsImNvZGUiOiIifSx7InRpY2siOjQ4LCJtaWRpIjozNSwibGVuZ3RoIjoxLCJ2ZWxvY2l0eSI6MSwiY29kZSI6IiJ9LHsidGljayI6NTYsIm1pZGkiOjM2LCJsZW5ndGgiOjEsInZlbG9jaXR5IjoxLCJjb2RlIjoiIn0seyJ0aWNrIjo2NCwibWlkaSI6MzgsImxlbmd0aCI6MSwidmVsb2NpdHkiOjEsImNvZGUiOiIifSx7InRpY2siOjgwLCJtaWRpIjo0MiwibGVuZ3RoIjoxLCJ2ZWxvY2l0eSI6MSwiY29kZSI6IiJ9LHsidGljayI6OTYsIm1pZGkiOjM4LCJsZW5ndGgiOjEsInZlbG9jaXR5IjoxLCJjb2RlIjoiIn0seyJ0aWNrIjoxMTIsIm1pZGkiOjM1LCJsZW5ndGgiOjEsInZlbG9jaXR5IjoxLCJjb2RlIjoiIn0seyJ0aWNrIjoxMjAsIm1pZGkiOjM2LCJsZW5ndGgiOjEsInZlbG9jaXR5IjoxLCJjb2RlIjoiIn1dLCJiYXNzVGV4dCI6eyJub3RlcyI6ImQyIGQyIGIxIGMyIGQyIGYjMiBkMiBiMSBjMiIsInBhdHRlcm4iOiJ4LS0tIC0tLS0gLS0tLSAtLS0tIC0tLS0gLS0tLSAtLS0tIC0tLS0geC0tLSAtLS0tIC0tLS0gLS0tLSB4LS0tIC0tLS0geC0tLSAtLS0tIHgtLS0gLS0tLSAtLS0tIC0tLS0geC0tLSAtLS0tIC0tLS0gLS0tLSB4LS0tIC0tLS0gLS0tLSAtLS0tIHgtLS0gLS0tLSB4LS0tIC0tLS0ifSwiZHJ1bXMiOnsia2ljayI6WzEsMCwwLDAsMSwwLDAsMCwxLDAsMCwwLDEsMCwwLDAsMSwwLDAsMCwxLDAsMCwwLDEsMCwwLDAsMSwwLDAsMF0sInNuYXJlIjpbMCwwLDAsMSwwLDAsMSwwLDAsMCwwLDEsMCwwLDEsMCwwLDAsMCwxLDAsMCwxLDAsMCwwLDAsMSwwLDAsMSwwXSwiaGloYXQiOlswLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDBdLCJvcGVuaGF0IjpbMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwLDAsMCwwXX0sIm11dGVzIjp7InJoeXRobSI6ZmFsc2UsImhhcm1vbnkiOmZhbHNlLCJiYXNzIjpmYWxzZSwiZHJ1bXMiOnsia2ljayI6ZmFsc2UsInNuYXJlIjpmYWxzZSwiaGloYXQiOmZhbHNlLCJvcGVuaGF0IjpmYWxzZX19LCJ0cmFja1ZvbHVtZXMiOnsia2ljayI6MSwic25hcmUiOjAuNzUsImhpaGF0IjowLjY5LCJvcGVuaGF0IjowLjU1fX1dfX0=";
 
 // --- helpers ---
 
@@ -175,76 +179,94 @@ describe("encodeScene / decodeScene — custom name", () => {
 
 // --- v1 → v2 migration ---
 
-describe("v1 → v2 migration (RIDDIM)", () => {
-  // First scene from real RIDDIM v1 payload
-  const introScene = {
-    name: "INTRO",
-    rhythm:  Array(32).fill("").map((_, i) => i === 30 ? "Ddim" : i % 4 === 2 ? "Dm" : ""),
-    harmony: Array(32).fill(""),
-    bass: [
-      { tick: 0,   midi: 38, length: 32, velocity: 1 },
-      { tick: 32,  midi: 38, length: 16, velocity: 1 },
-      { tick: 48,  midi: 35, length:  8, velocity: 1 },
-      { tick: 56,  midi: 36, length:  8, velocity: 1 },
-      { tick: 64,  midi: 38, length: 16, velocity: 1 },
-      { tick: 80,  midi: 42, length: 16, velocity: 1 },
-      { tick: 96,  midi: 38, length: 16, velocity: 1 },
-      { tick: 112, midi: 35, length:  8, velocity: 1 },
-      { tick: 120, midi: 36, length:  8, velocity: 1 },
-    ],
-    drums: {
-      kick:    [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
-      snare:   [0,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0],
-      hihat:   Array(32).fill(0),
-      openhat: Array(32).fill(0),
-    },
-    mutes:       { rhythm: false, harmony: false, bass: false, drums: Object.fromEntries(TRACKS.map((t) => [t.key, false])) },
-    trackVolumes: { kick: 1, snare: 0.75, hihat: 0.69, openhat: 0.55 },
-  };
-
-  it("encoded token is much shorter than raw JSON", () => {
-    const token = encodeScene(introScene, 0);
-    const rawJson = JSON.stringify(introScene);
-    expect(token.length).toBeLessThan(rawJson.length / 3);
+describe("v1 → v2 migration via decodeV1Payload", () => {
+  it("decodes the RIDDIM v1 payload successfully", () => {
+    const p = decodeV1Payload(RIDDIM_V1);
+    expect(p).not.toBeNull();
+    expect(p.songTitle).toBe("RIDDIM");
+    expect(p.bpm).toBe(80);
+    expect(p.scenes).toHaveLength(1);
   });
 
-  it("kick encodes with tile compression", () => {
-    expect(encodeScene(introScene, 0)).toContain("(X---)8");
+  it("rejects non-v1 payloads", () => {
+    expect(decodeV1Payload("notbase64!!!")).toBeNull();
+    expect(decodeV1Payload(btoa(JSON.stringify({ v: 2, p: {} })))).toBeNull();
   });
 
-  it("empty tracks encode to -!31", () => {
-    expect(encodeScene(introScene, 0)).toContain("-!31");
+  it("re-encoded header is compressed vs raw JSON", () => {
+    const p = decodeV1Payload(RIDDIM_V1);
+    const token = encodeHeader(p);
+    expect(token.length).toBeLessThan(JSON.stringify(p).length / 5);
   });
 
-  it("round-trips all drum patterns losslessly", () => {
-    const back = decodeScene(encodeScene(introScene, 0), 0);
+  it("re-encoded header round-trips bpm and title", () => {
+    const p = decodeV1Payload(RIDDIM_V1);
+    const h = decodeHeader(encodeHeader(p));
+    expect(h.bpm).toBe(80);
+    expect(h.songTitle).toBe("RIDDIM");
+  });
+
+  it("re-encoded header round-trips sounds", () => {
+    const p = decodeV1Payload(RIDDIM_V1);
+    const h = decodeHeader(encodeHeader(p));
+    expect(h.sounds.rhythm).toBe("guitar");
+    expect(h.sounds.drums.snare).toBe("tr808");
+    expect(h.sounds.drums.openhat).toBe("jazz");
+  });
+
+  it("encoded scene is far shorter than raw v1 JSON", () => {
+    const p = decodeV1Payload(RIDDIM_V1);
+    const scene0 = p.scenes[0];
+    const token = encodeScene(scene0, 0);
+    expect(token.length).toBeLessThan(JSON.stringify(scene0).length / 5);
+  });
+
+  it("kick pattern compresses to tile form", () => {
+    const p = decodeV1Payload(RIDDIM_V1);
+    expect(encodeScene(p.scenes[0], 0)).toContain("(X---)8");
+  });
+
+  it("empty hihat/openhat compress to !N form", () => {
+    const p = decodeV1Payload(RIDDIM_V1);
+    expect(encodeScene(p.scenes[0], 0)).toContain("-!31");
+  });
+
+  it("chord grid uses !N for rest runs", () => {
+    const p = decodeV1Payload(RIDDIM_V1);
+    const token = encodeScene(p.scenes[0], 0);
+    expect(token).toContain("_!");
+  });
+
+  it("round-trips all drum patterns losslessly through encode/decode", () => {
+    const p = decodeV1Payload(RIDDIM_V1);
+    const scene0 = p.scenes[0];
+    const back = decodeScene(encodeScene(scene0, 0), 0);
     ["kick", "snare", "hihat", "openhat"].forEach((key) => {
       back.drums[key].forEach((v, i) => {
-        expect(v > 0).toBe(introScene.drums[key][i] > 0);
+        expect(v > 0).toBe((scene0.drums[key][i] ?? 0) > 0);
       });
     });
   });
 
   it("round-trips chord grid including Ddim", () => {
-    const back = decodeScene(encodeScene(introScene, 0), 0);
+    const p = decodeV1Payload(RIDDIM_V1);
+    const back = decodeScene(encodeScene(p.scenes[0], 0), 0);
     expect(back.rhythm[2]).toBe("Dm");
     expect(back.rhythm[30]).toBe("Ddim");
+    expect(back.rhythm[0]).toBe("");
   });
 
-  it("encodes RIDDIM header correctly", () => {
-    const state = {
-      bpm: 80,
-      songTitle: "RIDDIM",
-      sounds: { rhythm: "guitar", harmony: "guitar", drums: { kick: "standard", snare: "tr808", hihat: "standard", openhat: "jazz" } },
-      bass: { enabled: false, preset: "custom", octave: 2, volume: 0.4, filter: 360, glide: 0.2, release: 0.25 },
-      volumes: { master: 0.64, rhythm: 0.55, harmony: 0.54, drums: 0.67 },
-    };
-    const token = encodeHeader(state);
-    const h = decodeHeader(token);
-    expect(h.bpm).toBe(80);
-    expect(h.songTitle).toBe("RIDDIM");
-    expect(h.sounds.rhythm).toBe("guitar");
-    expect(h.sounds.drums.snare).toBe("tr808");
+  it("all scenes encode and round-trip without loss", () => {
+    const p = decodeV1Payload(RIDDIM_V1);
+    p.scenes.forEach((scene, i) => {
+      const token = encodeScene(scene, i);
+      const back  = decodeScene(token, i);
+      ["kick", "snare", "hihat", "openhat"].forEach((key) => {
+        back.drums[key].forEach((v, j) => {
+          expect(v > 0).toBe((scene.drums[key][j] ?? 0) > 0);
+        });
+      });
+    });
   });
 });
 
