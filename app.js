@@ -577,6 +577,37 @@
         ]));
       }
 
+      function normalizeChordCatalog(rawCatalog, fallback = DEFAULT_CHORD_CATALOG) {
+        const source = rawCatalog && typeof rawCatalog === "object" ? rawCatalog : fallback;
+        return Object.fromEntries(Object.entries(source)
+          .map(([name, notes]) => [chordName(name), String(notes || "").trim()])
+          .filter(([name, notes]) => name && notes));
+      }
+
+      function chordCatalogSignature(rawCatalog) {
+        return JSON.stringify(Object.entries(normalizeChordCatalog(rawCatalog)).sort(([left], [right]) => left.localeCompare(right)));
+      }
+
+      function encodeChordCatalogPayload(rawCatalog) {
+        return utf8ToBase64Url(JSON.stringify(normalizeChordCatalog(rawCatalog)));
+      }
+
+      function decodeChordCatalogPayload(token) {
+        const parsed = JSON.parse(base64UrlToUtf8(token));
+        return normalizeChordCatalog(parsed);
+      }
+
+      function isDefaultSceneName(name) {
+        return /^Scene \d+$/i.test(String(name || "").trim());
+      }
+
+      function hasCustomTrackVolumes(scene) {
+        return TRACKS.some((track) => {
+          const currentVolume = clampNumber(scene.trackVolumes?.[track.key], 0, 1, track.volume);
+          return Math.round(currentVolume * 100) !== Math.round(track.volume * 100);
+        });
+      }
+
       function loadScriptOnce(src) {
         const existing = document.querySelector(`script[src="${src}"]`);
         if (existing) {
@@ -1702,6 +1733,7 @@
             ["detune", bassLayer.detune],
             ["layer_gain", bassLayer.gain],
           ])}`,
+          `; SKNKR.chord_catalog: ${encodeChordCatalogPayload(state.chordCatalog)}`,
           `; SKNKR.arrangement: ${state.scenes.map((scene, index) => `${dubSceneLabel(index)}:${sceneSummaries[index].role}`).join("|")}`,
           "",
         ];
@@ -1929,12 +1961,12 @@
         const instrument = parts.shift()?.slice(1).toLowerCase();
         if (!instrument) return null;
         if (parts[0] === "+" || parts[0] === "!") parts.shift();
-        const velocity = Number(parts[0]);
-        if (Number.isFinite(velocity)) parts.shift();
+        const volume = Number(parts[0]);
+        if (Number.isFinite(volume)) parts.shift();
         const patternParts = [];
         while (parts.length && isDubPatternToken(parts[0])) patternParts.push(parts.shift());
         if (!patternParts.length) return null;
-        return { instrument, pattern: patternParts.join(" "), notes: parts.join(" ") };
+        return { instrument, volume, pattern: patternParts.join(" "), notes: parts.join(" ") };
       }
 
       function dubDrumTrackKey(instrument) {
@@ -1999,17 +2031,30 @@
         const values = drumDubLineToValues(channel.pattern);
         if (!values) throw new Error(`Invalid ${channel.instrument} DUB line in ${scene.name}.`);
         scene.drums[drumTrack.key] = values;
+        if (Number.isFinite(channel.volume)) {
+          scene.trackVolumes[drumTrack.key] = clampNumber(channel.volume, 0, 1, scene.trackVolumes[drumTrack.key]);
+        }
       }
 
       function importDubText(text) {
         const scenesByName = new Map();
         const order = [];
         let nextBpm = state.bpm;
+        let nextChordCatalog = null;
         let currentSection = null;
         String(text || "").split(/\r?\n/).forEach((rawLine) => {
           const commentSceneName = rawLine.match(/^\s*;\s*scene\.name:\s*(.+)$/i);
           if (commentSceneName && currentSection) {
             currentSection.name = commentSceneName[1].trim() || currentSection.name;
+            return;
+          }
+          const chordCatalog = rawLine.match(/^\s*;\s*SKNKR\.chord_catalog:\s*(.+)$/i);
+          if (chordCatalog) {
+            try {
+              nextChordCatalog = decodeChordCatalogPayload(chordCatalog[1].trim());
+            } catch (error) {
+              console.warn("Could not decode DUB chord catalog", error);
+            }
             return;
           }
           const tempo = rawLine.match(/^\s*;\s*tempo:\s*(\d+(?:\.\d+)?)/i);
@@ -2040,6 +2085,7 @@
         const orderedNames = order.filter((name) => scenesByName.has(name));
         if (!orderedNames.length) throw new Error("No DUB sections found to import.");
         state.bpm = nextBpm;
+        if (nextChordCatalog) state.chordCatalog = nextChordCatalog;
         state.scenes = orderedNames.map((name, index) => normalizeScene(scenesByName.get(name), index));
         state.currentScene = 0;
         state.pendingScene = null;
@@ -2516,6 +2562,10 @@
           tokens.push(`b${bassValues.enabled}.${bassValues.preset}.${bassValues.octave}.${bassValues.filter}.${bassValues.glide}.${bassValues.release}`);
         }
 
+        if (chordCatalogSignature(state.chordCatalog) !== chordCatalogSignature(DEFAULT_CHORD_CATALOG)) {
+          tokens.push(`c${encodeChordCatalogPayload(state.chordCatalog)}`);
+        }
+
         return tokens.join(",");
       }
 
@@ -2582,6 +2632,14 @@
               glide: clampNumber(Number(glide) / 100, 0, 0.2, 0.04),
               release: clampNumber(Number(release) / 100, 0.04, 1, 0.22),
             };
+            return;
+          }
+          if (part.startsWith("c")) {
+            try {
+              snapshot.chordCatalog = decodeChordCatalogPayload(part.slice(1));
+            } catch (error) {
+              console.warn("Could not decode shared chord catalog", error);
+            }
           }
         });
         return snapshot;
@@ -2607,19 +2665,71 @@
           if (normalizedScene.mutes.drums[track.key]) muteBits |= 1 << (index + 3);
         });
         if (muteBits) parts.push(muteBits.toString(16));
+        if (hasCustomTrackVolumes(normalizedScene)) {
+          parts.push(`v${TRACKS.map((track) => Math.round(clampNumber(normalizedScene.trackVolumes[track.key], 0, 1, track.volume) * 100)).join("-")}`);
+        }
+        if (!isDefaultSceneName(normalizedScene.name)) {
+          parts.push(`n${utf8ToBase64Url(normalizedScene.name.trim())}`);
+        }
         return parts.join(".");
       }
 
       function decodeScene(token, index) {
         const parts = String(token || "").split(".");
-        const [rhythmRle = "-", harmonyRle = "-", drumsEnc = "(-)32:(-)32:(-)32:(-)32", bassEnc = "", mutesHex = ""] = parts;
+        const [rhythmRle = "-", harmonyRle = "-", drumsEnc = "(-)32:(-)32:(-)32:(-)32", ...extraParts] = parts;
+        let bassEnc = "";
+        let mutesHex = "";
+        let volumeToken = "";
+        let nameToken = "";
+        extraParts.forEach((part) => {
+          if (!part) return;
+          if (!bassEnc && part.includes(":")) {
+            bassEnc = part;
+            return;
+          }
+          if (!volumeToken && part.startsWith("v")) {
+            volumeToken = part.slice(1);
+            return;
+          }
+          if (!nameToken && part.startsWith("n")) {
+            nameToken = part.slice(1);
+            return;
+          }
+          if (!mutesHex && /^[0-9a-f]+$/i.test(part)) mutesHex = part;
+        });
         const drumParts = drumsEnc.split(":");
         const bassParts = bassEnc ? bassEnc.split(":") : [];
-        const bassNotes = bassParts[0] ? base64UrlToUtf8(bassParts[0]) : "";
+        let bassNotes = "";
+        if (bassParts[0]) {
+          try {
+            bassNotes = base64UrlToUtf8(bassParts[0]);
+          } catch (error) {
+            console.warn("Could not decode shared bass notes", error);
+          }
+        }
         const bassPattern = bassParts[1] || "";
         const bassEvents = bassNotes && bassPattern ? (bassPatternToEvents(bassNotes, bassPattern) || []) : [];
         const muteValue = Number.parseInt(mutesHex || "0", 16) || 0;
+        let sceneName;
+        if (nameToken) {
+          try {
+            const decodedName = base64UrlToUtf8(nameToken).trim();
+            if (decodedName) sceneName = decodedName;
+          } catch (error) {
+            console.warn("Could not decode shared scene name", error);
+          }
+        }
+        const trackVolumes = volumeToken
+          ? Object.fromEntries(TRACKS.map((track, trackIndex) => {
+            const volumeParts = volumeToken.split("-");
+            return [
+              track.key,
+              clampNumber(Number(volumeParts[trackIndex]) / 100, 0, 1, track.volume),
+            ];
+          }))
+          : undefined;
         return normalizeScene({
+          name: sceneName,
           rhythm: decodeChordRle(rhythmRle),
           harmony: decodeChordRle(harmonyRle),
           bass: bassEvents,
@@ -2637,6 +2747,7 @@
               Boolean(muteValue & (1 << (trackIndex + 3))),
             ])),
           },
+          trackVolumes,
         }, index);
       }
 
@@ -2688,6 +2799,7 @@
           if (header.strumLength !== undefined) snapshot.strumLength = header.strumLength;
           if (header.padAttack !== undefined) snapshot.padAttack = header.padAttack;
           if (header.bass) snapshot.bass = normalizeBassSettings({ ...snapshot.bass, ...header.bass });
+          if (header.chordCatalog) snapshot.chordCatalog = header.chordCatalog;
           snapshot.scenes = scenes;
           snapshot.currentScene = 0;
           applyPresetData(snapshot);
