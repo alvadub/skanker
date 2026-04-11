@@ -37,6 +37,7 @@ import {
 import { getInternalSynthParams, playInternalChord, playDrumInternal } from "./lib/audio-voices.js";
 import { createAudioGraph } from "./lib/audio-graph.js";
 import { getWebAudioFontPlayer, loadSoundProfile } from "./lib/audio-loader.js";
+import { AudioRuntime } from "./lib/audio-runtime.js";
 
       const LOOP_STEPS = STEPS;
       const INITIAL_SCENE_COUNT = 4;
@@ -123,18 +124,12 @@ import { getWebAudioFontPlayer, loadSoundProfile } from "./lib/audio-loader.js";
       };
 
       let audioContext;
-      let masterGain;
-      let rhythmGain;
-      let harmonyGain;
-      let drumGain;
-      let drumTrackGains;
-      let bassGain;
+      let audioRuntime = null;
       let schedulerTimer = null;
       let nextStepIndex = 0;
       let nextNoteTime = 0;
       let currentStepStartTime = 0;
       let lastEscapeAt = 0;
-      let harmonyVoice = null;
       let draggedStep = null;
       let draggedSceneIndex = null;
       let suppressNextStepClick = false;
@@ -332,32 +327,73 @@ import { getWebAudioFontPlayer, loadSoundProfile } from "./lib/audio-loader.js";
 
 
       function ensureAudio() {
-        if (audioContext) return;
+        if (audioRuntime) return audioRuntime;
         const Context = window.AudioContext || window.webkitAudioContext;
         audioContext = new Context();
-        const graph = createAudioGraph(audioContext, TRACKS.map((t) => t.key));
-        masterGain = graph.masterGain;
-        rhythmGain = graph.rhythmGain;
-        harmonyGain = graph.harmonyGain;
-        drumGain = graph.drumGain;
-        bassGain = graph.bassGain;
-        drumTrackGains = graph.drumTrackGains;
-        masterGain.connect(audioContext.destination);
+        audioRuntime = new AudioRuntime(audioContext, stepResolver, TRACKS.map((t) => t.key), {
+          bpm: state.bpm,
+          swing: 0,
+          lookahead: 0.1,
+          tickInterval: 0.025,
+          onStep: handleRuntimeStep,
+        });
+        audioRuntime.graph.connect(audioContext.destination);
+        audioRuntime.sounds = { ...state.sounds };
+        audioRuntime.kit = state.sounds.drums.kick || "internal";
+        audioRuntime.volumes = { ...state.volumes };
+        audioRuntime.bassParams = { ...state.bass };
         applyVolumes();
+        return audioRuntime;
+      }
+
+      function handleRuntimeStep(step, time) {
+        state.playhead = step;
+        renderPlayhead();
+        el.status.textContent = "Playing";
+        el.songSubtitle.textContent = currentSongSubtitle();
+      }
+
+      function stepResolver(stepIndex) {
+        const scene = currentScene();
+        if (!scene) return null;
+        const drumStep = stepIndex % DRUM_STEPS;
+        const bassStep = stepIndex % STEPS;
+        const previousHarmonyChord = scene.harmony[(stepIndex - 1 + CHORD_STEPS) % CHORD_STEPS];
+        const harmonyChord = scene.harmony[stepIndex];
+        const harmonyStarts = Boolean(harmonyChord) && String(harmonyChord).trim() !== String(previousHarmonyChord || "").trim();
+        const harmonyStops = !String(harmonyChord || "").trim() && String(previousHarmonyChord || "").trim();
+
+        return {
+          rhythm: scene.rhythm[stepIndex] ? [scene.rhythm[stepIndex]] : null,
+          harmony: (harmonyStarts || (stepIndex === 0 && harmonyChord)) ? harmonyChord : (harmonyStops || (stepIndex === 0 && !harmonyChord)) ? null : undefined,
+          drums: TRACKS.map((track) => ({
+            trackKey: track.key,
+            velocity: normalizeDrumValue(scene.drums[track.key][drumStep]),
+          })).filter((d) => d.velocity > 0),
+          bass: scene.bass.filter((event) => bassEventStep(event) === stepIndex).map((event) => ({
+            note: event.midi,
+            tick: event.tick,
+          })),
+        };
       }
 
       function applyVolumes() {
-        if (!audioContext) return;
+        if (!audioRuntime) return;
         const time = audioContext.currentTime;
         const scene = currentScene();
-        masterGain.gain.setTargetAtTime(state.volumes.master, time, 0.01);
-        rhythmGain.gain.setTargetAtTime(scene.mutes?.rhythm ? 0 : state.volumes.rhythm, time, 0.01);
-        harmonyGain.gain.setTargetAtTime(scene.mutes?.harmony ? 0 : state.volumes.harmony, time, 0.01);
-        drumGain.gain.setTargetAtTime(state.volumes.drums, time, 0.01);
-        bassGain.gain.setTargetAtTime(scene.mutes?.bass ? 0 : state.bass.volume, time, 0.01);
-        TRACKS.forEach((track) => {
-          drumTrackGains?.[track.key]?.gain.setTargetAtTime(scene.mutes?.drums?.[track.key] ? 0 : 1, time, 0.01);
-        });
+        audioRuntime.setVolume("master", state.volumes.master);
+        audioRuntime.setVolume("rhythm", scene.mutes?.rhythm ? 0 : state.volumes.rhythm);
+        audioRuntime.setVolume("harmony", scene.mutes?.harmony ? 0 : state.volumes.harmony);
+        audioRuntime.setVolume("drums", state.volumes.drums);
+        audioRuntime.setVolume("bass", scene.mutes?.bass ? 0 : state.bass.volume);
+        if (audioRuntime.graph.drumTrackGains) {
+          TRACKS.forEach((track) => {
+            const gain = audioRuntime.graph.drumTrackGains[track.key];
+            if (gain) {
+              gain.gain.setTargetAtTime(scene.mutes?.drums?.[track.key] ? 0 : 1, time, 0.01);
+            }
+          });
+        }
       }
 
       function drumSoundDefinition(kitKey, trackKey) {
@@ -695,30 +731,26 @@ import { getWebAudioFontPlayer, loadSoundProfile } from "./lib/audio-loader.js";
       }
 
       async function startPlayback() {
-        ensureAudio();
+        const runtime = ensureAudio();
         await audioContext.resume();
         if (state.sounds.rhythm !== "internal" || state.sounds.harmony !== "internal" || TRACKS.some((track) => state.sounds.drums[track.key] !== "internal")) {
           el.status.textContent = "Loading selected sounds...";
           await ensureSelectedSounds();
         }
         stopPlayback(false);
+        runtime.setBPM(state.bpm);
+        runtime.start();
         state.isPlaying = true;
         state.playhead = -1;
-        nextStepIndex = 0;
-        nextNoteTime = audioContext.currentTime + 0.05;
-        schedulerTimer = window.setInterval(schedulerTick, 25);
-        schedulerTick();
         renderAll();
       }
 
       function stopPlayback(render = true) {
-        if (schedulerTimer) window.clearInterval(schedulerTimer);
+        if (audioRuntime) audioRuntime.stop();
         schedulerTimer = null;
         state.isPlaying = false;
         state.playhead = -1;
         state.pendingScene = null;
-        if (audioContext) releaseHarmony(audioContext.currentTime);
-        releaseAllBassNotes();
         el.status.textContent = "Stopped";
         if (render) renderAll();
       }
