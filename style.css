@@ -769,6 +769,20 @@
         display: block;
       }
 
+      body.mode-edit .drum-roll,
+      body.mode-edit .bassline-roll,
+      body.mode-edit .layer-row.rhythm,
+      body.mode-edit .layer-row.harmony {
+        filter: grayscale(1);
+        opacity: 0.72;
+      }
+
+      body.mode-edit .layer-row.rhythm:has(.chord-input.invalid),
+      body.mode-edit .layer-row.harmony:has(.chord-input.invalid) {
+        filter: none;
+        opacity: 1;
+      }
+
       .drum-grid {
         display: grid;
         gap: 0.55rem;
