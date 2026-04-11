@@ -1,0 +1,22 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      harmonics:
+        specifier: ^1.1.2
+        version: 1.1.2
+
+packages:
+
+  harmonics@1.1.2:
+    resolution: {integrity: sha512-K5d7WJ/KGwzKWyrvxP/bmnfMIkMgq/JeCZLRYSTOpB1UfaOz17O4PWHMnXeBNK0ScjllpZQw9D8UHIQxwD/6ig==}
+
+snapshots:
+
+  harmonics@1.1.2: {}

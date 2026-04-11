@@ -3,5 +3,8 @@
   "type": "module",
   "scripts": {
     "test": "bun test"
+  },
+  "dependencies": {
+    "harmonics": "^1.1.2"
   }
 }
