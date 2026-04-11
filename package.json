@@ -5,6 +5,7 @@
     "test": "bun test"
   },
   "dependencies": {
-    "harmonics": "^1.1.2"
+    "harmonics": "^1.1.2",
+    "midi-writer-js": "^3.2.1"
   }
 }
