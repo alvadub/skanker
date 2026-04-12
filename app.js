@@ -3589,6 +3589,12 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         const nextMode = normalizeUiMode(mode);
         if (state.uiMode === nextMode) return;
         state.uiMode = nextMode;
+        if (nextMode === "listen" && state.textMode) {
+          state.textMode = false;
+          localStorage.setItem("skanker-text-mode", "false");
+          document.body.classList.remove("mode-text");
+          el.textModeToggle.classList.remove("active");
+        }
         savePreset();
         renderShell();
         renderScenes();
