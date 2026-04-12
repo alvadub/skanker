@@ -2716,62 +2716,80 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
 
       function renderBassNotesPreview(preview, rawNotes, rawPattern = formatBassPattern(currentScene().bass), tickOffset = 0, maxTicks = BASS_TICKS) {
         if (!preview) return;
-        preview.replaceChildren();
         const pattern = parseBassPattern(rawPattern, maxTicks);
         const expectedNotes = pattern ? bassPatternStats(pattern).pulses : 0;
         const bassPlayhead = state.playhead >= 0 ? state.playhead % STEPS : state.playhead;
         const activeNoteIndex = bassActiveNoteIndex(rawPattern, bassPlayhead * BASS_TICKS_PER_STEP - tickOffset, maxTicks);
-        let noteIndex = 0;
-        const parts = splitWhitespacePreservingParts(rawNotes);
-        parts.forEach((part) => {
-          if (/^\s+$/.test(part)) {
-            preview.append(document.createTextNode(part));
-            return;
-          }
-          const cell = document.createElement("span");
-          cell.textContent = part;
-          if (!parseNoteName(part)) {
-            cell.classList.add("invalid");
-          } else if (noteIndex >= expectedNotes) {
-            cell.classList.add("extra");
-          } else {
-            cell.classList.add("on");
-          }
+        const needsRebuild = preview.dataset.notes !== rawNotes || preview.dataset.pattern !== rawPattern;
+        if (needsRebuild) {
+          preview.replaceChildren();
+          preview.dataset.notes = rawNotes;
+          preview.dataset.pattern = rawPattern;
+          let noteIndex = 0;
+          const parts = splitWhitespacePreservingParts(rawNotes);
+          parts.forEach((part) => {
+            if (/^\s+$/.test(part)) {
+              preview.append(document.createTextNode(part));
+              return;
+            }
+            const cell = document.createElement("span");
+            cell.textContent = part;
+            if (!parseNoteName(part)) {
+              cell.classList.add("invalid");
+            } else if (noteIndex >= expectedNotes) {
+              cell.classList.add("extra");
+            } else {
+              cell.classList.add("on");
+            }
+            cell.dataset.noteIndex = noteIndex;
+            preview.append(cell);
+            noteIndex += 1;
+          });
+        }
+        preview.querySelectorAll("[data-note-index]").forEach((cell) => {
+          const noteIndex = Number(cell.dataset.noteIndex);
           cell.classList.toggle("playing", noteIndex === activeNoteIndex);
-          preview.append(cell);
-          noteIndex += 1;
         });
       }
 
       function renderBassEditorPreview(preview, rawPattern = formatBassPattern(currentScene().bass), tickOffset = 0, maxTicks = BASS_TICKS) {
         if (!preview) return;
-        preview.replaceChildren();
         const raw = String(rawPattern || "");
         const bassPlayhead = state.playhead >= 0 ? state.playhead % STEPS : state.playhead;
         const activeTick = bassPlayhead * BASS_TICKS_PER_STEP - tickOffset;
-        let hasActiveNote = false;
-        let tick = 0;
-        [...raw].forEach((char) => {
-          if (/[\s|]/.test(char)) {
-            preview.append(document.createTextNode(char));
-            return;
-          }
-          const cell = document.createElement("span");
-          cell.textContent = char;
-          const symbol = char === "." || char === "0" ? "-" : char;
-          if (symbol === "x" || symbol === "X" || (symbol === "_" && !hasActiveNote)) {
-            cell.classList.add(symbol === "X" ? "accent" : "on");
-            hasActiveNote = true;
-          } else if (symbol === "_") {
-            cell.classList.add("sustain");
-          } else if (symbol === "-") {
-            cell.classList.add("rest");
-            hasActiveNote = false;
-          }
-          cell.classList.toggle("playing", activeTick >= 0 && tick >= activeTick && tick < activeTick + BASS_TICKS_PER_STEP);
-          cell.ariaLabel = `Bass pattern tick ${tick + 1}${cell.classList.contains("playing") ? " playing" : ""}`;
-          preview.append(cell);
-          tick += 1;
+        const needsRebuild = preview.dataset.pattern !== raw;
+        if (needsRebuild) {
+          preview.replaceChildren();
+          preview.dataset.pattern = raw;
+          let hasActiveNote = false;
+          let tick = 0;
+          [...raw].forEach((char) => {
+            if (/[\s|]/.test(char)) {
+              preview.append(document.createTextNode(char));
+              return;
+            }
+            const cell = document.createElement("span");
+            cell.textContent = char;
+            const symbol = char === "." || char === "0" ? "-" : char;
+            if (symbol === "x" || symbol === "X" || (symbol === "_" && !hasActiveNote)) {
+              cell.classList.add(symbol === "X" ? "accent" : "on");
+              hasActiveNote = true;
+            } else if (symbol === "_") {
+              cell.classList.add("sustain");
+            } else if (symbol === "-") {
+              cell.classList.add("rest");
+              hasActiveNote = false;
+            }
+            cell.dataset.tick = tick;
+            preview.append(cell);
+            tick += 1;
+          });
+        }
+        preview.querySelectorAll("[data-tick]").forEach((cell) => {
+          const tick = Number(cell.dataset.tick);
+          const isPlaying = activeTick >= 0 && tick >= activeTick && tick < activeTick + BASS_TICKS_PER_STEP;
+          cell.classList.toggle("playing", isPlaying);
+          cell.ariaLabel = `Bass pattern tick ${tick + 1}${isPlaying ? " playing" : ""}`;
         });
       }
 
