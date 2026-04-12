@@ -235,6 +235,7 @@
       .hero-projects {
         display: flex;
         flex-direction: row;
+        flex-wrap: wrap;
         gap: 0.5rem;
         align-items: flex-start;
         justify-content: flex-end;
@@ -282,7 +283,8 @@
       }
 
       .save-url-song {
-        grid-column: 1 / -1;
+        width: 100%;
+        margin-top: 0.35rem;
         padding: 0.35rem 0.5rem;
         font-size: 0.8rem;
         background: var(--rhythm);

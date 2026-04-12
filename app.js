@@ -1613,10 +1613,8 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           if (header.chordCatalog) snapshot.chordCatalog = header.chordCatalog;
           snapshot.scenes = scenes;
           snapshot.currentScene = 0;
-          applyPresetData(snapshot);
-          state.currentProjectId = null;
-          state.dirty = false;
-          replaceUrlWithCurrentShareState();
+          state.pendingUrlSnapshot = snapshot;
+          state.hasUrlSong = true;
           return true;
         } catch (error) {
           console.warn("Could not load shared URL state v2", error);
@@ -3143,6 +3141,9 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
               currentScene().bass = events;
               savePreset();
             }
+          } else if (!notesInput.value.trim() || !patternInput.value.trim()) {
+            currentScene().bass = [];
+            savePreset();
           }
           renderBassNotesPreview(notesPreview, notesInput.value, patternInput.value, 0, BASS_TICKS);
           renderBassEditorPreview(patternPreview, patternInput.value, 0, BASS_TICKS);
