@@ -38,7 +38,7 @@ import { getInternalSynthParams, playInternalChord, playDrumInternal } from "./l
 import { createAudioGraph } from "./lib/audio-graph.js";
 import { getWebAudioFontPlayer, loadSoundProfile } from "./lib/audio-loader.js";
 import { AudioRuntime } from "./lib/audio-runtime.js";
-import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSymbolGroups, parseDrumPattern, formatDrumPattern, renderDrumPatternPreview, renderChordPatternPreview, renderChordPoolPreview, chordLayerPartValues, formatChordPatternPart, formatChordPoolPart, chordActivePoolIndex, parseChordPool, chordPatternToSlots, normalizeDubPatternSymbol, dubPatternChars, parseDubPatternCells, reconcilePastePattern, parseBassInlinePattern, parseChordInlinePattern, isDubPatternToken, normalizeChordPoolText, parseDubBassSymbols, dubSceneLabel, dubLineComment, dubMetaValue, dubMetaMap, formatDubChordLayer, formatDubBassPattern } from "./lib/ui-widgets.js";
+import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSymbolGroups, parseDrumPattern, formatDrumPattern, renderDrumPatternPreview, renderChordPatternPreview, renderChordPoolPreview, chordLayerPartValues, formatChordPatternPart, formatChordPoolPart, chordActivePoolIndex, parseChordPool, chordPatternToSlots, normalizeDubPatternSymbol, dubPatternChars, parseDubPatternCells, reconcilePastePattern, parseBassInlinePattern, parseChordInlinePattern, isDubPatternToken, normalizeChordPoolText, parseDubBassSymbols, dubSceneLabel, dubLineComment, dubMetaValue, dubMetaMap, formatDubChordLayer, formatDubBassPattern, orderedUnique, dubDrumTrackKey, soundLabel, drumSoundLabel, bassPresetLabel } from "./lib/ui-widgets.js";
 
       const LOOP_STEPS = STEPS;
       const INITIAL_SCENE_COUNT = 4;
@@ -901,27 +901,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           const input = preview.parentElement?.querySelector(".drum-pattern-input");
           renderDrumPatternPreview(preview, input?.value, state.playhead >= 0 ? state.playhead % DRUM_STEPS : -1, DRUM_STEPS);
           if (input) preview.scrollLeft = input.scrollLeft;
-        });
-      }
-
-      function soundLabel(key) {
-        return SOUND_CATALOG[key]?.label || key;
-      }
-
-      function drumSoundLabel(key) {
-        return DRUM_KIT_CATALOG[key]?.label || key;
-      }
-
-      function bassPresetLabel(key) {
-        return BASS_PRESETS[key]?.label || key;
-      }
-
-      function orderedUnique(values) {
-        const seen = new Set();
-        return values.filter((value) => {
-          if (!value || seen.has(value)) return false;
-          seen.add(value);
-          return true;
         });
       }
 
