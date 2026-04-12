@@ -81,7 +81,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
 
       const state = {
         bpm: 100,
-        uiMode: "edit",
+        uiMode: "listen",
         textMode: localStorage.getItem("skanker-text-mode") === "true",
         songTitle: "SKNKR",
         songNote: "Live dub sketch for groove, chords, and arrangement review.",
@@ -1868,35 +1868,38 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           tab.classList.toggle("empty", isEmpty);
           tab.addEventListener("click", () => selectScene(index));
           tab.addEventListener("dblclick", () => {
-            if (state.uiMode !== "edit") return;
-            const input = document.createElement("input");
-            input.type = "text";
-            input.value = scene.name;
-            input.className = "scene-name-input";
-            input.spellcheck = false;
-            tab.replaceWith(input);
-            input.focus();
-            input.select();
-            const finishEdit = () => {
-              const nextName = input.value.trim();
-              if (nextName && nextName !== scene.name) {
-                scene.name = nextName;
-                savePreset();
-              }
-              input.replaceWith(tab);
-              tab.textContent = scene.name;
-              renderScenes();
-            };
-            input.addEventListener("blur", finishEdit);
-            input.addEventListener("keydown", (e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                input.blur();
-              } else if (e.key === "Escape") {
-                input.value = scene.name;
-                input.blur();
-              }
-            });
+            if (state.uiMode === "edit") {
+              const input = document.createElement("input");
+              input.type = "text";
+              input.value = scene.name;
+              input.className = "scene-name-input";
+              input.spellcheck = false;
+              tab.replaceWith(input);
+              input.focus();
+              input.select();
+              const finishEdit = () => {
+                const nextName = input.value.trim();
+                if (nextName && nextName !== scene.name) {
+                  scene.name = nextName;
+                  savePreset();
+                }
+                input.replaceWith(tab);
+                tab.textContent = scene.name;
+                renderScenes();
+              };
+              input.addEventListener("blur", finishEdit);
+              input.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  input.blur();
+                } else if (e.key === "Escape") {
+                  input.value = scene.name;
+                  input.blur();
+                }
+              });
+            } else {
+              selectScene(index, true);
+            }
           });
           tab.addEventListener("dragstart", (event) => {
             draggedSceneIndex = index;

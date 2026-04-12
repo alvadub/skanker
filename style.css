@@ -242,24 +242,43 @@
 
       .hero-projects select {
         min-width: 10rem;
+        padding: 0.35rem 0.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--text);
+        font-size: 0.85rem;
       }
 
       .hero-projects .project-actions {
         display: flex;
-        gap: 0.25rem;
+        gap: 0.15rem;
       }
 
-      .hero-projects .project-actions button {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.9rem;
-        background: var(--panel);
+      .hero-projects .project-actions .icon-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.8rem;
+        height: 1.8rem;
+        padding: 0;
+        background: transparent;
         border: 1px solid var(--line);
-        border-radius: 0.35rem;
+        border-radius: 0.4rem;
         cursor: pointer;
+        color: var(--muted);
+        transition: all 0.15s ease;
       }
 
-      .hero-projects .project-actions button:hover {
+      .hero-projects .project-actions .icon-button svg {
+        width: 0.9rem;
+        height: 0.9rem;
+      }
+
+      .hero-projects .project-actions .icon-button:hover {
         background: var(--surface);
+        color: var(--text);
+        border-color: var(--muted);
       }
 
       .hero-title-input {
@@ -905,9 +924,10 @@
 
       .drum-row {
         display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 0.28rem;
+        grid-template-columns: 4.5rem minmax(18rem, 1fr) minmax(13.5rem, max-content);
+        gap: 0.5rem;
         align-items: center;
+        padding: 0 0.5rem;
       }
 
       .beat-label-row {
@@ -953,26 +973,23 @@
       }
 
       .track-head {
-        display: grid;
-        grid-template-columns: 4.5rem 1fr auto;
-        gap: 0.5rem;
-        align-items: center;
-        border: 1px solid var(--line);
-        border-radius: 0.75rem;
-        background: #12151a;
-        padding: 0.4rem 0.5rem;
+        display: contents;
       }
 
       .track-head strong {
+        grid-column: 1;
         color: var(--drum);
         font-size: 0.9rem;
         white-space: nowrap;
+        padding: 0.4rem 0;
+        padding-left: 0.5rem;
       }
 
       .track-surface {
         grid-column: 2;
         position: relative;
         transition: opacity 120ms ease, filter 120ms ease;
+        width: 100%;
       }
 
       .drum-pattern-input {
@@ -993,6 +1010,7 @@
 
       .bassline-roll,
       .drum-roll {
+        width: 100%;
         background:
           repeating-linear-gradient(90deg, rgba(154, 164, 178, 0.12) 0 1px, transparent 1px calc(100% / 32)),
           linear-gradient(180deg, rgba(154, 164, 178, 0.08), rgba(154, 164, 178, 0.02));
@@ -1089,6 +1107,7 @@
       }
 
       .drum-inline-editor {
+        grid-column: 1 / -1;
         display: grid;
         gap: 0.55rem;
         margin-top: 0.45rem;
@@ -1235,6 +1254,7 @@
       }
 
       .bass-inline-editor {
+        grid-column: 1 / -1;
         display: grid;
         gap: 0.55rem;
       }
