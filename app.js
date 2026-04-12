@@ -38,7 +38,7 @@ import { getInternalSynthParams, playInternalChord, playDrumInternal } from "./l
 import { createAudioGraph } from "./lib/audio-graph.js";
 import { getWebAudioFontPlayer, loadSoundProfile } from "./lib/audio-loader.js";
 import { AudioRuntime } from "./lib/audio-runtime.js";
-import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSymbolGroups, parseDrumPattern, formatDrumPattern, renderDrumPatternPreview, renderChordPatternPreview, renderChordPoolPreview, chordLayerPartValues, formatChordPatternPart, formatChordPoolPart, chordActivePoolIndex } from "./lib/ui-widgets.js";
+import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSymbolGroups, parseDrumPattern, formatDrumPattern, renderDrumPatternPreview, renderChordPatternPreview, renderChordPoolPreview, chordLayerPartValues, formatChordPatternPart, formatChordPoolPart, chordActivePoolIndex, parseChordPool, chordPatternToSlots } from "./lib/ui-widgets.js";
 
       const LOOP_STEPS = STEPS;
       const INITIAL_SCENE_COUNT = 4;
@@ -902,37 +902,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         currentScene().bass = sortAndTrimBassEvents(results.flatMap((result) => result.events));
         savePreset();
         renderBassRoll();
-      }
-
-      function parseChordPool(rawChords) {
-        const tokens = splitWhitespacePreservingParts(rawChords).filter((part) => !/^\s+$/.test(part));
-        if (!tokens.length) return [];
-        const chords = tokens.map((token) => parseChord(token));
-        return chords.some((chord) => !chord) ? null : chords.map((chord) => chord.label);
-      }
-
-      function chordPatternToSlots(rawChords, rawPattern, maxSteps = CHORD_EDITOR_PART_STEPS) {
-        const chords = parseChordPool(rawChords);
-        const pattern = parseChordPattern(rawPattern, maxSteps);
-        if (!chords || !pattern) return null;
-        if (chords.length !== chordPatternStats(pattern).pulses) return null;
-        const slots = Array(maxSteps).fill("");
-        let chordIndex = 0;
-        let currentChord = "";
-        pattern.forEach((symbol, step) => {
-          if (symbol === "x" || symbol === "X" || (symbol === "_" && !currentChord)) {
-            currentChord = chords[chordIndex] || "";
-            slots[step] = currentChord;
-            chordIndex += 1;
-            return;
-          }
-          if (symbol === "_" && currentChord) {
-            slots[step] = currentChord;
-            return;
-          }
-          currentChord = "";
-        });
-        return slots;
       }
 
       function renderDrumPatternPreviews() {
