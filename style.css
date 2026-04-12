@@ -186,7 +186,6 @@
       }
 
       header.hero,
-      .hero-note-card,
       .panel {
         border: 1px solid var(--line);
         border-radius: 1.15rem;
@@ -230,8 +229,10 @@
 
       .hero-copy {
         min-width: 0;
-        display: grid;
-        gap: 0.85rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        flex: 1;
       }
 
       .hero-title-input {
@@ -251,9 +252,8 @@
         outline: 2px solid red;
       }
 
-      .hero-note-input {
+      .hero-copy .hero-note-input {
         font-family: inherit;
-        width: 100%;
         resize: none;
         min-height: 0;
         height: auto;
@@ -262,7 +262,9 @@
         border: none;
         outline: none;
         background: transparent;
-        line-height: inherit;
+        line-height: 1.4;
+        font-size: 0.85rem;
+        color: var(--muted);
       }
 
       .chord-pattern-preview,
@@ -358,11 +360,6 @@
       .hero-note-input::placeholder {
         color: var(--muted);
         font-style: italic;
-      }
-
-      .hero-note-card {
-        margin-bottom: 1rem;
-        padding: 1rem 1.25rem;
       }
 
       .hero-tags {
