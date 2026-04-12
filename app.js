@@ -245,7 +245,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           [8, 24].forEach((step) => scene.drums.snare[step] = 1);
           for (let step = 2; step < DRUM_STEPS; step += 4) scene.drums.hihat[step] = 1;
           [15, 31].forEach((step) => scene.drums.openhat[step] = 1);
-          const defaultBassPattern = "---- ---- ---- ---- ---- ---- ---- ---- ---x ---- ---x ---- ---x ---x ---- ---- ---x ---- ---x ---- ---x ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ";
+          const defaultBassPattern = "---- ---- ---- ---- ---- ---- ---- ---- ---x ---- ---x ---- ---x ---- --x- ---- ---x ---- ---x ---- ---x ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ";
           const defaultBassNotes = "c2 c2 c2 e2 f2 f2 f2";
           const bassEvents = bassPatternToEvents(defaultBassNotes, defaultBassPattern, 0, BASS_TICKS);
           if (bassEvents) scene.bass = bassEvents;
