@@ -23,11 +23,12 @@
           <div class="brand-mark">SKANKR</div>
           <div class="control-group transport transport-inline">
             <button id="play" class="transport-icon-button" aria-label="Play">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.75v10.5L13 8 4 2.75Z" fill="currentColor"/></svg>
+              <svg viewBox="0 0 16 16" aria-hidden="true" class="play-icon"><path d="M4 2.75v10.5L13 8 4 2.75Z" fill="currentColor"/></svg>
+              <svg viewBox="0 0 16 16" aria-hidden="true" class="pause-icon" style="display:none"><path d="M3.5 3.5h3.5v9h-3.5zm5.5 0h3.5v9H9z" fill="currentColor"/></svg>
               <span class="sr-only">Play</span>
             </button>
             <button id="stop" class="transport-icon-button" aria-label="Stop">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5h3.5v9h-3.5zm5.5 0h3.5v9H9z" fill="currentColor"/></svg>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9" fill="currentColor"/></svg>
               <span class="sr-only">Stop</span>
             </button>
             <div class="control-group bpm-control bpm-inline">
@@ -49,7 +50,6 @@
           <button id="mode-edit" type="button" role="tab" aria-selected="true">Edit</button>
         </div>
         <div class="topbar-actions">
-          <div id="status" class="status-pill">Stopped</div>
           <button id="text-mode-toggle" type="button" title="Text mode" aria-label="Toggle text mode">Txt</button>
           <button id="project-save" class="save-button" type="button">SAVE</button>
           <button id="mixer-open" type="button">Mixer</button>
@@ -65,13 +65,21 @@
         </div>
         <div class="hero-copy">
           <input type="text" id="song-title-input" class="hero-title-input" spellcheck="false" aria-label="Song title" placeholder="Song title is required" readonly>
-          <p id="song-subtitle" class="hero-subtitle">Two-bar browser sequencer for groove, chords, and arrangement review.</p>
           <textarea id="song-note-input" class="hero-note-input" spellcheck="true" aria-label="Composer note" placeholder="Add a note..." readonly></textarea>
+        </div>
+        <div class="hero-projects">
+          <select id="project-select" aria-label="Saved projects"></select>
+          <div class="project-actions">
+            <button id="project-load" type="button" title="Load project">📂</button>
+            <button id="project-remove" type="button" title="Remove project">🗑️</button>
+            <button id="project-clear" type="button" title="Clear working project">✨</button>
+          </div>
         </div>
       </header>
 
       <div class="workspace">
         <aside class="sidebar" aria-label="Song structure">
+          <div id="scene-status" class="scene-status"></div>
           <section class="panel" aria-label="Scenes">
             <h2>Scenes</h2>
             <label class="scene-loop-control">
@@ -79,16 +87,6 @@
               Keep active scene looping
             </label>
             <div class="scene-tabs" id="scene-tabs"></div>
-          </section>
-          <section class="panel" aria-label="Projects">
-            <h2>Projects</h2>
-            <div id="project-meta" class="project-meta">Unsaved working session</div>
-            <select id="project-select" aria-label="Saved projects"></select>
-            <div class="project-actions">
-              <button id="project-load" type="button" title="Load project">📂</button>
-              <button id="project-remove" type="button" title="Remove project">🗑️</button>
-              <button id="project-clear" type="button" title="Clear working project">✨</button>
-            </div>
           </section>
         </aside>
 

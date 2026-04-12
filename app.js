@@ -139,13 +139,13 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
       let draggedSceneIndex = null;
       let suppressNextStepClick = false;
       let lastBassMidi = null;
+      let harmonyVoice = null;
       let foundationProbeSnapshot = null;
       let foundationProbeAudioContext = null;
       let foundationProbeStopTimer = null;
       const activeBassNotes = new Map();
 
       const el = {
-        status: document.getElementById("status"),
         textModeToggle: document.getElementById("text-mode-toggle"),
         modeListen: document.getElementById("mode-listen"),
         modeEdit: document.getElementById("mode-edit"),
@@ -161,7 +161,8 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         mixerClose: document.getElementById("mixer-close"),
         songTitleDisplay: document.getElementById("song-title-display"),
         songTitleInput: document.getElementById("song-title-input"),
-        songSubtitle: document.getElementById("song-subtitle"),
+        heroDiscRing: document.querySelector(".hero-disc-ring"),
+        sceneStatus: document.getElementById("scene-status"),
         songNoteDisplay: document.getElementById("song-note-display"),
         songNoteInput: document.getElementById("song-note-input"),
         play: document.getElementById("play"),
@@ -170,7 +171,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         bpmDown: document.getElementById("bpm-down"),
         bpmUp: document.getElementById("bpm-up"),
         projectSave: document.getElementById("project-save"),
-        projectMeta: document.getElementById("project-meta"),
         projectSelect: document.getElementById("project-select"),
         projectLoad: document.getElementById("project-load"),
         projectRemove: document.getElementById("project-remove"),
@@ -315,8 +315,10 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
       function handleRuntimeStep(step, time) {
         state.playhead = step;
         renderPlayhead();
-        el.status.textContent = "Playing";
-        el.songSubtitle.textContent = currentSongSubtitle();
+        el.sceneStatus.innerHTML = currentSongSubtitle();
+        if (step === CHORD_STEPS - 1) {
+          advanceSceneSequence(time + (60 / state.bpm / 4));
+        }
       }
 
       function stepResolver(stepIndex) {
@@ -331,7 +333,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           harmony: rawChord || null,
           drums: TRACKS.map((track) => ({
             trackKey: track.key,
-            velocity: normalizeDrumValue(scene.drums[track.key][drumStep]),
+            velocity: normalizeDrumValue(scene.drums?.[track.key]?.[drumStep] ?? 0),
           })).filter((d) => d.velocity > 0),
           bass: scene.bass.filter((event) => bassEventStep(event) === stepIndex).map((event) => ({
             note: event.midi,
@@ -582,7 +584,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         scene.bassText = bassTextState(scene.bass, null, formatBassNotes, formatBassPattern);
         savePreset();
         renderDrumGrid();
-        el.status.textContent = `Recorded bass ${bassNoteLabel({ midi })} on bass step ${(state.playhead % STEPS) + 1}.${(tick % BASS_TICKS_PER_STEP) + 1}`;
       }
 
       function playBassNote(code, offset) {
@@ -621,7 +622,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         const rhythmChord = activeChordAt(scene.rhythm, skankReferenceStep);
         const harmonyChord = activeChordAt(scene.harmony, skankReferenceStep);
         if (!rhythmChord && !harmonyChord) return "";
-        return ` · ${rhythmChord || "-"} / ${harmonyChord || "-"}`;
+        return ` · ${rhythmChord || "-"} | ${harmonyChord || "-"}`;
       }
 
       function scheduleStep(step, time) {
@@ -650,8 +651,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           state.playhead = step;
           currentStepStartTime = time;
           renderPlayhead();
-          el.status.textContent = "Playing";
-          el.songSubtitle.textContent = currentSongSubtitle();
+            el.sceneStatus.innerHTML = currentSongSubtitle();
         }, Math.max(0, (time - audioContext.currentTime) * 1000));
       }
 
@@ -664,18 +664,44 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         }
       }
 
+      function updatePlayButtonIcon() {
+        const playIcon = el.play.querySelector(".play-icon");
+        const pauseIcon = el.play.querySelector(".pause-icon");
+        if (state.isPlaying) {
+          if (playIcon) playIcon.style.display = "none";
+          if (pauseIcon) pauseIcon.style.display = "block";
+          el.play.setAttribute("aria-label", "Pause");
+        } else {
+          if (playIcon) playIcon.style.display = "block";
+          if (pauseIcon) pauseIcon.style.display = "none";
+          el.play.setAttribute("aria-label", "Play");
+        }
+      }
+
+      function togglePlayback() {
+        if (state.isPlaying) {
+          pausePlayback();
+        } else {
+          startPlayback();
+        }
+      }
+
       async function startPlayback() {
         const runtime = ensureAudio();
         await audioContext.resume();
         if (state.sounds.rhythm !== "internal" || state.sounds.harmony !== "internal" || TRACKS.some((track) => state.sounds.drums[track.key] !== "internal")) {
-          el.status.textContent = "Loading selected sounds...";
-          await ensureSelectedSounds();
+            await ensureSelectedSounds();
         }
-        stopPlayback(false);
+        const resumeFrom = state.playhead >= 0 ? state.playhead : -1;
+        const startStep = resumeFrom >= 0 ? resumeFrom + 1 : 0;
+        if (resumeFrom < 0) {
+          stopPlayback(false);
+        }
         runtime.setBPM(state.bpm);
-        runtime.start();
+        runtime.start(startStep);
         state.isPlaying = true;
-        state.playhead = -1;
+        if (resumeFrom < 0) state.playhead = -1;
+        updatePlayButtonIcon();
         renderAll();
       }
 
@@ -685,8 +711,17 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         state.isPlaying = false;
         state.playhead = -1;
         state.pendingScene = null;
-        el.status.textContent = "Stopped";
+        updatePlayButtonIcon();
         if (render) renderAll();
+      }
+
+      function pausePlayback() {
+        if (audioRuntime) audioRuntime.stop();
+        schedulerTimer = null;
+        state.isPlaying = false;
+        updatePlayButtonIcon();
+        renderPlayhead();
+        el.sceneStatus.innerHTML = currentSongSubtitle();
       }
 
       function runBlockingAction(action) {
@@ -1192,7 +1227,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           try {
             runBlockingAction(() => null);
             importDubText(String(reader.result || ""));
-            el.status.textContent = `Imported ${file.name}`;
           } catch (error) {
             alertBlocking(error instanceof Error ? error.message : "Could not import DUB file.");
           } finally {
@@ -1573,7 +1607,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           return true;
         } catch (error) {
           console.warn("Could not load shared URL state v2", error);
-          el.status.textContent = "Invalid shared URL payload";
           return false;
         }
       }
@@ -1642,7 +1675,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         const scene = currentScene();
         const pattern = drumUndoBuffer[trackKey];
         if (!pattern) {
-          el.status.textContent = "Nothing to undo for " + trackKey;
           return;
         }
         scene.drums[trackKey] = pattern;
@@ -1650,13 +1682,11 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         applyVolumes();
         savePreset();
         renderDrumGrid();
-        el.status.textContent = "Undone " + trackKey;
       }
 
       function undoBassClear() {
         const scene = currentScene();
         if (!bassUndoBuffer) {
-          el.status.textContent = "Nothing to undo for bass";
           return;
         }
         scene.bass = bassUndoBuffer;
@@ -1664,7 +1694,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         bassUndoBuffer = null;
         savePreset();
         renderDrumGrid();
-        el.status.textContent = "Undone bass clear";
       }
 
       const drumUndoBuffer = {};
@@ -1682,11 +1711,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
 
       function renderProjectState() {
         const project = currentProject();
-        if (el.projectMeta) {
-          el.projectMeta.textContent = project
-            ? `${project.name}${state.dirty ? " · unsaved changes" : ""}`
-            : (state.dirty ? `Unsaved · ${state.songTitle} · modified` : `Unsaved · ${state.songTitle}`);
-        }
         if (el.projectSave) {
           el.projectSave.classList.toggle("dirty", state.dirty || !project);
           el.projectSave.textContent = project ? (state.dirty ? "SAVE" : "SAVED") : "SAVE";
@@ -1744,7 +1768,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         saveProjects();
         renderProjectState();
         renderShell();
-        el.status.textContent = `Saved ${project.name}`;
       }
 
       function loadSelectedProject() {
@@ -1762,7 +1785,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         releaseHarmony(audioContext?.currentTime || 0);
         releaseAllBassNotes();
         renderAll();
-        el.status.textContent = `Loaded ${project.name}`;
       }
 
       function removeSelectedProject() {
@@ -1777,7 +1799,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         }
         saveProjects();
         renderProjectState();
-        el.status.textContent = `Removed ${project.name}`;
       }
 
       function clearWorkingProject() {
@@ -1792,7 +1813,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         releaseHarmony(audioContext?.currentTime || 0);
         releaseAllBassNotes();
         renderAll();
-        el.status.textContent = "Cleared working project";
       }
 
       function applySharedStateFromUrl() {
@@ -1811,7 +1831,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           return true;
         } catch (error) {
           console.warn("Could not load shared URL state", error);
-          el.status.textContent = "Invalid shared URL payload";
           return false;
         }
       }
@@ -1841,6 +1860,12 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           tab.textContent = scene.name;
           tab.classList.toggle("active", index === state.currentScene);
           tab.classList.toggle("pending", index === state.pendingScene);
+          const hasRhythm = scene.rhythm && scene.rhythm.some(Boolean);
+          const hasHarmony = scene.harmony && scene.harmony.some(Boolean);
+          const hasBass = scene.bass && scene.bass.length > 0;
+          const hasDrums = scene.drums && Object.values(scene.drums).some(arr => arr && arr.some(v => v > 0));
+          const isEmpty = !hasRhythm && !hasHarmony && !hasBass && !hasDrums;
+          tab.classList.toggle("empty", isEmpty);
           tab.addEventListener("click", () => selectScene(index));
           tab.addEventListener("dblclick", () => {
             if (state.uiMode !== "edit") return;
@@ -1947,10 +1972,12 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
       }
 
       function hasContent(scene) {
-        return scene.rhythm.some(Boolean)
-          || scene.harmony.some(Boolean)
-          || scene.bass.some(Boolean)
-          || TRACKS.some((track) => scene.drums[track.key].some(Boolean));
+        if (!scene) return false;
+        const hasRhythm = scene.rhythm && scene.rhythm.some(Boolean);
+        const hasHarmony = scene.harmony && scene.harmony.some(Boolean);
+        const hasBass = scene.bass && scene.bass.some(Boolean);
+        const hasDrums = scene.drums && TRACKS.some((track) => scene.drums[track.key] && scene.drums[track.key].some(v => v > 0));
+        return hasRhythm || hasHarmony || hasBass || hasDrums;
       }
 
       function selectScene(index, startIfStopped = false) {
@@ -1958,14 +1985,14 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         if (!scene) return;
         if (state.isPlaying && index !== state.currentScene) {
           state.pendingScene = index;
-          el.status.textContent = `Queued ${scene.name}`;
-        } else {
+          renderScenes();
+        } else if (index !== state.currentScene) {
           state.currentScene = index;
           state.pendingScene = null;
           releaseHarmony(audioContext?.currentTime || 0);
+          savePreset();
+          renderAll();
         }
-        savePreset();
-        renderAll();
         if (startIfStopped && !state.isPlaying) startPlayback();
       }
 
@@ -2030,7 +2057,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
             notes: typeof source.bassText?.notes === "string" ? source.bassText.notes : formatBassNotes(source.bass),
             pattern: typeof source.bassText?.pattern === "string" ? source.bassText.pattern : formatBassPattern(source.bass),
           },
-          drums: Object.fromEntries(TRACKS.map((track) => [track.key, [...source.drums[track.key]]])),
+          drums: Object.fromEntries(TRACKS.map((track) => [track.key, [...(source.drums?.[track.key] || [])]])),
           mutes: {
             rhythm: Boolean(source.mutes?.rhythm),
             harmony: Boolean(source.mutes?.harmony),
@@ -2322,7 +2349,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
       function saveCurrentUserChordPreset(name) {
         const normalizedName = name.trim();
         if (!normalizedName) {
-          el.status.textContent = "Name progression before saving";
           return;
         }
         const existingIndex = state.userChordPresets.findIndex((preset) => preset.name.toLowerCase() === normalizedName.toLowerCase());
@@ -3234,7 +3260,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
       function saveCurrentUserDrumPreset(name) {
         const normalizedName = name.trim();
         if (!normalizedName) {
-          el.status.textContent = "Name rhythm before saving";
           return;
         }
         const existingIndex = state.userDrumPresets.findIndex((preset) => preset.name.toLowerCase() === normalizedName.toLowerCase());
@@ -3378,6 +3403,10 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         renderBassEditorPlayhead();
         renderChordEditorPlayhead();
         renderDrumPatternPreviews();
+        if (el.heroDiscRing) {
+          const progress = state.playhead >= 0 ? ((state.playhead % STEPS) / STEPS) * 100 : 0;
+          el.heroDiscRing.style.setProperty("--progress", `${progress}%`);
+        }
       }
 
       function renderSoundOptions(select, options, currentValue) {
@@ -3405,10 +3434,12 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         const scene = currentScene();
         const slot = `Scene ${sceneShortcutLabel()}`;
         const sceneLabel = scene.name && scene.name !== slot ? ` · ${scene.name}` : "";
+        const playIcon = '<svg viewBox="0 0 16 16" class="status-icon"><path d="M4 2.75v10.5L13 8 4 2.75Z" fill="currentColor"/></svg>';
+        const stopIcon = '<svg viewBox="0 0 16 16" class="status-icon"><rect x="3.5" y="3.5" width="9" height="9" fill="currentColor"/></svg>';
         if (state.isPlaying && state.playhead >= 0) {
-          return `${state.bpm} BPM · ${slot}${sceneLabel} · step ${state.playhead + 1}${activeChordStatus(scene, state.playhead)}`;
+          return `${playIcon} ${slot}${sceneLabel}${activeChordStatus(scene, state.playhead)}`;
         }
-        return `${state.bpm} BPM · ${slot}${sceneLabel} · stopped`;
+        return `${stopIcon} ${slot}${sceneLabel}`;
       }
 
       function setProbeSummary(items) {
@@ -3579,6 +3610,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         el.songNoteInput.readOnly = state.uiMode !== "edit";
         el.songNoteInput.style.height = "auto";
         el.songNoteInput.style.height = el.songNoteInput.scrollHeight + "px";
+        el.sceneStatus.innerHTML = currentSongSubtitle();
         el.writeDub.value = exportDubText();
         renderFoundationProbe();
         el.mixerOpen.classList.toggle("active", el.mixerDialog.hasAttribute("open"));
@@ -3598,10 +3630,8 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
       async function copyText(text, successLabel = "Copied") {
         try {
           await navigator.clipboard.writeText(text);
-          el.status.textContent = successLabel;
           if (!state.isPlaying) {
             window.setTimeout(() => {
-              if (!state.isPlaying) el.status.textContent = "Stopped";
             }, 1200);
           }
         } catch (error) {
@@ -3715,7 +3745,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         releaseBassNote(event.code);
       }
 
-      el.play.addEventListener("click", startPlayback);
+      el.play.addEventListener("click", togglePlayback);
       el.stop.addEventListener("click", () => stopPlayback());
       el.modeListen.addEventListener("click", () => setUiMode("listen"));
       el.modeEdit.addEventListener("click", () => setUiMode("edit"));
@@ -3794,7 +3824,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
 el.shareLink.addEventListener("click", () => {
         const url = currentShareUrlV2();
         if (url.length > 7800) {
-          el.status.textContent = "Shared URL is large";
         }
         copyText(url, "Link copied");
       });
@@ -3920,9 +3949,7 @@ el.shareLink.addEventListener("click", () => {
       el.rhythmSound.addEventListener("change", async (event) => {
         state.sounds.rhythm = Object.prototype.hasOwnProperty.call(SOUND_CATALOG, event.target.value) ? event.target.value : "internal";
         if (audioContext && state.sounds.rhythm !== "internal") {
-          el.status.textContent = "Loading rhythm sound...";
           await loadSoundProfile(audioContext, state.sounds.rhythm, SOUND_CATALOG);
-          if (!state.isPlaying) el.status.textContent = "Stopped";
         }
         savePreset();
         if (audioRuntime) audioRuntime.sounds.rhythm = state.sounds.rhythm;
@@ -3931,9 +3958,7 @@ el.shareLink.addEventListener("click", () => {
       el.harmonySound.addEventListener("change", async (event) => {
         state.sounds.harmony = Object.prototype.hasOwnProperty.call(SOUND_CATALOG, event.target.value) ? event.target.value : "internal";
         if (audioContext && state.sounds.harmony !== "internal") {
-          el.status.textContent = "Loading harmony sound...";
           await loadSoundProfile(audioContext, state.sounds.harmony, SOUND_CATALOG);
-          if (!state.isPlaying) el.status.textContent = "Stopped";
         }
         releaseHarmony(audioContext?.currentTime || 0);
         if (audioRuntime) {
@@ -3947,9 +3972,7 @@ el.shareLink.addEventListener("click", () => {
           state.sounds.drums[track.key] = Object.prototype.hasOwnProperty.call(DRUM_KIT_CATALOG, event.target.value) ? event.target.value : "internal";
           const drumSound = drumSoundDefinition(state.sounds.drums[track.key], track.key);
           if (audioContext && drumSound) {
-            el.status.textContent = `Loading ${track.label} sound...`;
             await loadSoundProfile(audioContext, drumSound.presetName, { [drumSound.presetName]: drumSound });
-            if (!state.isPlaying) el.status.textContent = "Stopped";
           }
           if (audioRuntime) audioRuntime.sounds.drums[track.key] = state.sounds.drums[track.key];
           savePreset();
