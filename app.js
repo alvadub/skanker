@@ -38,7 +38,7 @@ import { getInternalSynthParams, playInternalChord, playDrumInternal } from "./l
 import { createAudioGraph } from "./lib/audio-graph.js";
 import { getWebAudioFontPlayer, loadSoundProfile } from "./lib/audio-loader.js";
 import { AudioRuntime } from "./lib/audio-runtime.js";
-import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSymbolGroups, parseDrumPattern, formatDrumPattern, renderDrumPatternPreview, renderChordPatternPreview, renderChordPoolPreview, chordLayerPartValues, formatChordPatternPart, formatChordPoolPart, chordActivePoolIndex, parseChordPool, chordPatternToSlots, normalizeDubPatternSymbol, dubPatternChars, parseDubPatternCells, reconcilePastePattern, parseBassInlinePattern, parseChordInlinePattern, isDubPatternToken, normalizeChordPoolText, parseDubBassSymbols, dubSceneLabel, dubLineComment, dubMetaValue, dubMetaMap, formatDubChordLayer, formatDubBassPattern, orderedUnique, dubDrumTrackKey, soundLabel, drumSoundLabel, bassPresetLabel, summarizeChordLayer, summarizeDrumTrack, summarizeBassEvents, summarizeScene as summarizeSceneFn, parseDubChannelLine, parseDubArrangement, chordDubLineToSlots, drumDubLineToValues, bassDubLineToEvents, detectPasteFormat, chordPoolTextState, bassTextState } from "./lib/ui-widgets.js";
+import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSymbolGroups, parseDrumPattern, formatDrumPattern, renderDrumPatternPreview, renderChordPatternPreview, renderChordPoolPreview, chordLayerPartValues, formatChordPatternPart, formatChordPoolPart, chordActivePoolIndex, parseChordPool, chordPatternToSlots, normalizeDubPatternSymbol, dubPatternChars, parseDubPatternCells, reconcilePastePattern, parseBassInlinePattern, parseChordInlinePattern, isDubPatternToken, normalizeChordPoolText, parseDubBassSymbols, dubSceneLabel, dubLineComment, dubMetaValue, dubMetaMap, formatDubChordLayer, formatDubBassPattern, orderedUnique, dubDrumTrackKey, soundLabel, drumSoundLabel, bassPresetLabel, summarizeChordLayer, summarizeDrumTrack, summarizeBassEvents, summarizeScene as summarizeSceneFn, parseDubChannelLine, parseDubArrangement, chordDubLineToSlots, drumDubLineToValues, bassDubLineToEvents, detectPasteFormat, chordPoolTextState, bassTextState, createBlankScene } from "./lib/ui-widgets.js";
 
       const LOOP_STEPS = STEPS;
       const INITIAL_SCENE_COUNT = 4;
@@ -245,31 +245,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         }
 
         return scene;
-      }
-
-      function createBlankScene(index) {
-        return {
-          name: `Scene ${index + 1}`,
-          rhythm: Array(CHORD_STEPS).fill(""),
-          harmony: Array(CHORD_STEPS).fill(""),
-          chordPoolText: {
-            rhythm: Array(CHORD_EDITOR_PARTS).fill(""),
-            harmony: Array(CHORD_EDITOR_PARTS).fill(""),
-          },
-          bass: [],
-          bassText: {
-            notes: "",
-            pattern: "",
-          },
-          drums: Object.fromEntries(TRACKS.map((track) => [track.key, Array(DRUM_STEPS).fill(0)])),
-          mutes: {
-            rhythm: false,
-            harmony: false,
-            bass: false,
-            drums: Object.fromEntries(TRACKS.map((track) => [track.key, false])),
-          },
-          trackVolumes: Object.fromEntries(TRACKS.map((track) => [track.key, track.volume])),
-        };
       }
 
       function currentScene() {
