@@ -281,7 +281,24 @@
         </div>
         <label>Preset <select id="bass-preset"></select></label>
         <label>Shape <select id="bass-shape"></select></label>
-        <label>Octave <input id="bass-octave" type="number" min="0" max="4" step="1" value="2" /></label>
+        <div class="bass-octave-control">
+          <label>Bass Playback</label>
+          <button type="button" id="bass-playback-toggle" class="icon-button compact-button" aria-label="Toggle bass playback" title="Toggle bass playback">▶</button>
+        </div>
+        <div class="bass-octave-control">
+          <label>Octave</label>
+          <button type="button" id="bass-octave-down" class="icon-button compact-button" aria-label="Octave down">-</button>
+          <span id="bass-octave-display">2</span>
+          <button type="button" id="bass-octave-up" class="icon-button compact-button" aria-label="Octave up">+</button>
+        </div>
+        <div class="bass-octave-control">
+          <label>Transpose</label>
+          <button type="button" id="bass-transpose-down" class="icon-button compact-button" aria-label="Transpose down">-</button>
+          <span id="bass-transpose-display">0</span>
+          <button type="button" id="bass-transpose-up" class="icon-button compact-button" aria-label="Transpose up">+</button>
+          <button type="button" id="bass-transpose-reset" class="icon-button compact-button" aria-label="Reset transpose" title="Reset transpose">0</button>
+          <button type="button" id="bass-transpose-apply" class="icon-button compact-button" aria-label="Apply transpose" title="Apply transpose to notes">✓</button>
+        </div>
         <label>Glide <input id="bass-glide" type="range" min="0" max="0.2" step="0.01" value="0.04" /></label>
         <label>Release <input id="bass-release" type="range" min="0.04" max="1" step="0.01" value="0.2" /></label>
       </div>

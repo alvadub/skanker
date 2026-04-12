@@ -113,6 +113,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           enabled: false,
           preset: "sub",
           octave: 2,
+          transpose: 0,
           volume: 0.65,
           filter: 420,
           glide: 0.04,
@@ -193,7 +194,15 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         harmonyMute: document.getElementById("harmony-mute"),
         bassPreset: document.getElementById("bass-preset"),
         bassShape: document.getElementById("bass-shape"),
-        bassOctave: document.getElementById("bass-octave"),
+        bassPlaybackToggle: document.getElementById("bass-playback-toggle"),
+        bassOctaveDisplay: document.getElementById("bass-octave-display"),
+        bassOctaveDown: document.getElementById("bass-octave-down"),
+        bassOctaveUp: document.getElementById("bass-octave-up"),
+        bassTransposeDisplay: document.getElementById("bass-transpose-display"),
+        bassTransposeDown: document.getElementById("bass-transpose-down"),
+        bassTransposeUp: document.getElementById("bass-transpose-up"),
+        bassTransposeReset: document.getElementById("bass-transpose-reset"),
+        bassTransposeApply: document.getElementById("bass-transpose-apply"),
         bassVolume: document.getElementById("bass-volume"),
         bassGlide: document.getElementById("bass-glide"),
         bassRelease: document.getElementById("bass-release"),
@@ -247,7 +256,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           [8, 24].forEach((step) => scene.drums.snare[step] = 1);
           for (let step = 2; step < DRUM_STEPS; step += 4) scene.drums.hihat[step] = 1;
           [15, 31].forEach((step) => scene.drums.openhat[step] = 1);
-          const defaultBassPattern = "---- ---- ---- ---- ---- ---- ---- ---- ---x ---- ---x ---- ---x ---- --x- ---- ---x ---- ---x ---- ---x ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ";
+          const defaultBassPattern = "---- ---- ---- ---- ---- ---- ---- ---- x___ ---- x--- ---- ---x ---- --x- ---- ---x ---- ---x ---- ---x ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ";
           const defaultBassNotes = "c2 c2 c2 e2 f2 f2 f2";
           const bassEvents = bassPatternToEvents(defaultBassNotes, defaultBassPattern, 0, BASS_TICKS);
           if (bassEvents) scene.bass = bassEvents;
@@ -336,7 +345,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
             velocity: normalizeDrumValue(scene.drums?.[track.key]?.[drumStep] ?? 0),
           })).filter((d) => d.velocity > 0),
           bass: scene.bass.filter((event) => bassEventStep(event) === stepIndex).map((event) => ({
-            note: event.midi,
+            note: event.midi + state.bass.transpose,
             tick: event.tick,
             length: event.length,
           })),
@@ -1401,6 +1410,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           enabled: Boolean(source.enabled),
           preset: rawPreset,
           octave: Math.trunc(clampNumber(source.octave, 0, 4, 2)),
+          transpose: Math.trunc(clampNumber(source.transpose, -24, 24, 0)),
           volume: clampNumber(source.volume, 0, 1, 0.65),
           filter: clampNumber(source.filter, 120, 1800, preset.filter),
           glide: clampNumber(source.glide, 0, 0.2, preset.glide),
@@ -3099,7 +3109,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         bassHead.querySelector("[data-open-bass-editor]").addEventListener("click", openBassEditor);
         bassHead.querySelector("[data-clear-bassline]").addEventListener("click", () => {
           if (!scene.bass.length) return;
-          if (!confirmBlocking(`Clear bassline for ${scene.name}?`)) return;
           bassUndoBuffer = [...scene.bass];
           scene.bass = [];
           scene.bassText = bassTextState(scene.bass, null, formatBassNotes, formatBassPattern);
@@ -3226,7 +3235,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           head.querySelector("[data-clear-drum]").addEventListener("click", () => {
             const pattern = scene.drums[track.key];
             if (!pattern || pattern.every(v => !v)) return;
-            if (!confirmBlocking(`Clear ${track.label} for ${scene.name}?`)) return;
             drumUndoBuffer[track.key] = [...pattern];
             scene.drums[track.key] = Array(pattern.length).fill(null);
             savePreset();
@@ -3653,7 +3661,15 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           el.bassRecordToggle.textContent = state.bass.recording ? "Record Bass On" : "Record Bass Off";
           el.bassRecordToggle.classList.toggle("active", state.bass.recording);
         }
-        el.bassOctave.value = state.bass.octave;
+        if (el.bassPlaybackToggle) {
+          el.bassPlaybackToggle.classList.toggle("active", state.bass.enabled);
+          el.bassPlaybackToggle.textContent = state.bass.enabled ? "■" : "▶";
+        }
+        if (el.bassOctaveDisplay) el.bassOctaveDisplay.textContent = state.bass.octave;
+        if (el.bassTransposeDisplay) {
+          const octaves = Math.round(state.bass.transpose / 12);
+          el.bassTransposeDisplay.textContent = octaves > 0 ? `+${octaves}` : octaves;
+        }
         el.bassVolume.value = state.bass.volume;
         el.bassGlide.value = state.bass.glide;
         el.bassRelease.value = state.bass.release;
@@ -3907,23 +3923,67 @@ el.shareLink.addEventListener("click", () => {
       if (el.bassClear) el.bassClear.addEventListener("click", () => {
         const scene = currentScene();
         if (!scene.bass.length) return;
-        if (!confirmBlocking(`Clear bassline for ${scene.name}?`)) return;
         scene.bass = [];
         savePreset();
         renderDrumGrid();
       });
       el.bassPreset.addEventListener("change", (event) => applyBassPreset(event.target.value));
+      if (el.bassPlaybackToggle) el.bassPlaybackToggle.addEventListener("click", () => {
+        state.bass.enabled = !state.bass.enabled;
+        savePreset();
+        renderBassControls();
+        renderDrumGrid();
+      });
       el.bassShape.addEventListener("change", (event) => {
         state.bass.preset = "custom";
         state.bass.layers = [{ ...state.bass.layers[0], shape: BASS_SHAPES.includes(event.target.value) ? event.target.value : "sine" }];
         savePreset();
         renderBassControls();
       });
-      el.bassOctave.addEventListener("change", (event) => {
-        state.bass.octave = Math.trunc(clampNumber(event.target.value, 0, 4, state.bass.octave));
+      if (el.bassOctaveDown) el.bassOctaveDown.addEventListener("click", () => {
+        state.bass.octave = Math.max(0, state.bass.octave - 1);
         releaseAllBassNotes();
         savePreset();
         renderBassControls();
+      });
+      if (el.bassOctaveUp) el.bassOctaveUp.addEventListener("click", () => {
+        state.bass.octave = Math.min(4, state.bass.octave + 1);
+        releaseAllBassNotes();
+        savePreset();
+        renderBassControls();
+      });
+      if (el.bassTransposeDown) el.bassTransposeDown.addEventListener("click", () => {
+        state.bass.transpose = Math.max(-24, state.bass.transpose - 12);
+        releaseAllBassNotes();
+        savePreset();
+        renderBassControls();
+      });
+      if (el.bassTransposeUp) el.bassTransposeUp.addEventListener("click", () => {
+        state.bass.transpose = Math.min(24, state.bass.transpose + 12);
+        releaseAllBassNotes();
+        savePreset();
+        renderBassControls();
+      });
+      if (el.bassTransposeReset) el.bassTransposeReset.addEventListener("click", () => {
+        state.bass.transpose = 0;
+        releaseAllBassNotes();
+        savePreset();
+        renderBassControls();
+      });
+      if (el.bassTransposeApply) el.bassTransposeApply.addEventListener("click", () => {
+        if (state.bass.transpose === 0) return;
+        const scene = currentScene();
+        if (!scene.bass.length) return;
+        scene.bass.forEach((event) => {
+          if (event && typeof event.midi === "number") {
+            event.midi = Math.max(0, Math.min(127, event.midi + state.bass.transpose));
+          }
+        });
+        scene.bassText = bassTextState(scene.bass, null, formatBassNotes, formatBassPattern);
+        state.bass.transpose = 0;
+        savePreset();
+        renderBassControls();
+        renderDrumGrid();
       });
       el.bassVolume.addEventListener("input", (event) => {
         state.bass.volume = clampNumber(event.target.value, 0, 1, state.bass.volume);
@@ -4007,6 +4067,21 @@ el.shareLink.addEventListener("click", () => {
       el.soundDialog.addEventListener("cancel", closeSoundCatalog);
       el.bassEditorClose.addEventListener("click", closeBassEditor);
       el.bassEditorDialog.addEventListener("cancel", closeBassEditor);
+      document.querySelectorAll(".bass-key").forEach((key) => {
+        const code = key.dataset.bassKey;
+        const offset = BASS_KEY_MAP.get(code);
+        if (offset === undefined) return;
+        key.addEventListener("mousedown", () => {
+          ensureAudio();
+          playBassNote(code, offset);
+        });
+        key.addEventListener("mouseup", () => {
+          releaseBassNote(code);
+        });
+        key.addEventListener("mouseleave", () => {
+          releaseBassNote(code);
+        });
+      });
       el.chordPresetsClose.addEventListener("click", closeChordPresets);
       el.chordPresetsDialog.addEventListener("cancel", closeChordPresets);
       el.chordPresetsDialog.addEventListener("close", () => {
