@@ -38,7 +38,7 @@ import { getInternalSynthParams, playInternalChord, playDrumInternal } from "./l
 import { createAudioGraph } from "./lib/audio-graph.js";
 import { getWebAudioFontPlayer, loadSoundProfile } from "./lib/audio-loader.js";
 import { AudioRuntime } from "./lib/audio-runtime.js";
-import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSymbolGroups, parseDrumPattern, formatDrumPattern, renderDrumPatternPreview, renderChordPatternPreview, renderChordPoolPreview, chordLayerPartValues, formatChordPatternPart, formatChordPoolPart, chordActivePoolIndex, parseChordPool, chordPatternToSlots, normalizeDubPatternSymbol, dubPatternChars, parseDubPatternCells, reconcilePastePattern, parseBassInlinePattern, parseChordInlinePattern, isDubPatternToken, normalizeChordPoolText, parseDubBassSymbols, dubSceneLabel, dubLineComment, dubMetaValue, dubMetaMap } from "./lib/ui-widgets.js";
+import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSymbolGroups, parseDrumPattern, formatDrumPattern, renderDrumPatternPreview, renderChordPatternPreview, renderChordPoolPreview, chordLayerPartValues, formatChordPatternPart, formatChordPoolPart, chordActivePoolIndex, parseChordPool, chordPatternToSlots, normalizeDubPatternSymbol, dubPatternChars, parseDubPatternCells, reconcilePastePattern, parseBassInlinePattern, parseChordInlinePattern, isDubPatternToken, normalizeChordPoolText, parseDubBassSymbols, dubSceneLabel, dubLineComment, dubMetaValue, dubMetaMap, formatDubChordLayer, formatDubBassPattern } from "./lib/ui-widgets.js";
 
       const LOOP_STEPS = STEPS;
       const INITIAL_SCENE_COUNT = 4;
@@ -914,48 +914,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
 
       function bassPresetLabel(key) {
         return BASS_PRESETS[key]?.label || key;
-      }
-
-      function formatDubChordLayer(layerValues) {
-        const symbols = [];
-        const chords = [];
-        let currentChord = "";
-        fixedLengthArray(layerValues, "", CHORD_STEPS).forEach((rawValue) => {
-          const value = String(rawValue || "").trim();
-          if (!value) {
-            symbols.push("-");
-            currentChord = "";
-            return;
-          }
-          if (currentChord && value === currentChord) {
-            symbols.push("_");
-            return;
-          }
-          symbols.push("x");
-          chords.push(value);
-          currentChord = value;
-        });
-        return { pattern: chordPatternSymbolGroups(symbols), pool: chords.join(" ") };
-      }
-
-      function formatDubBassPattern(events) {
-        const symbols = Array(BASS_TICKS).fill("-");
-        normalizeBassEvents(events).forEach((event) => {
-          symbols[event.tick] = "x";
-          for (let offset = 1; offset < event.length && event.tick + offset < BASS_TICKS; offset += 1) {
-            if (symbols[event.tick + offset] === "-") symbols[event.tick + offset] = "_";
-          }
-        });
-        const cells = [];
-        for (let step = 0; step < STEPS; step += 1) {
-          const tick = step * BASS_TICKS_PER_STEP;
-          cells.push(`[${symbols.slice(tick, tick + BASS_TICKS_PER_STEP).join("")}]`);
-        }
-        const groups = [];
-        for (let index = 0; index < cells.length; index += 4) {
-          groups.push(cells.slice(index, index + 4).join(""));
-        }
-        return groups.join(" ");
       }
 
       function orderedUnique(values) {
