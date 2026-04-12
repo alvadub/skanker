@@ -261,6 +261,16 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         scene.chordPoolText[layer][partIndex] = value;
       }
 
+      function setChordPatternText(scene, layer, partIndex, value) {
+        if (!scene.chordPatternText) {
+          scene.chordPatternText = {
+            rhythm: chordPoolTextState(scene.rhythm, null, CHORD_EDITOR_PARTS, formatChordPatternPart),
+            harmony: chordPoolTextState(scene.harmony, null, CHORD_EDITOR_PARTS, formatChordPatternPart),
+          };
+        }
+        scene.chordPatternText[layer][partIndex] = value;
+      }
+
       function ensureAudio() {
         if (audioRuntime) return audioRuntime;
         const Context = window.AudioContext || window.webkitAudioContext;
@@ -1190,6 +1200,10 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
             rhythm: chordPoolTextState(rhythm, source.chordPoolText?.rhythm),
             harmony: chordPoolTextState(harmony, source.chordPoolText?.harmony),
           },
+          chordPatternText: {
+            rhythm: chordPoolTextState(rhythm, source.chordPatternText?.rhythm, CHORD_EDITOR_PARTS, formatChordPatternPart),
+            harmony: chordPoolTextState(harmony, source.chordPatternText?.harmony, CHORD_EDITOR_PARTS, formatChordPatternPart),
+          },
           bass,
           bassText: bassTextState(bass, source.bassText),
           drums: Object.fromEntries(TRACKS.map((track) => [
@@ -1958,6 +1972,10 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
             rhythm: [...(source.chordPoolText?.rhythm || chordPoolTextState(source.rhythm))],
             harmony: [...(source.chordPoolText?.harmony || chordPoolTextState(source.harmony))],
           },
+          chordPatternText: {
+            rhythm: [...(source.chordPatternText?.rhythm || chordPoolTextState(source.rhythm, null, CHORD_EDITOR_PARTS, formatChordPatternPart))],
+            harmony: [...(source.chordPatternText?.harmony || chordPoolTextState(source.harmony, null, CHORD_EDITOR_PARTS, formatChordPatternPart))],
+          },
           bass: source.bass.map((note) => note ? { ...note } : null),
           bassText: {
             notes: typeof source.bassText?.notes === "string" ? source.bassText.notes : formatBassNotes(source.bass),
@@ -2472,13 +2490,13 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
             <label class="chord-inline-row"><span class="inline-label-icon" aria-hidden="true">${uiIcon("notes")}</span><span class="sr-only">Chords</span>
               <span class="bass-text-overlay-wrap">
                 <span class="chord-pool-preview bass-text-preview" aria-hidden="true"></span>
-                <input class="chord-pool-input" value="${escapeAttr(scene.chordPoolText?.[layer.key]?.[partIndex] ?? formatChordPoolPart(scene[layer.key], partIndex))}" spellcheck="false" placeholder="Dm G C Am" />
+                  <input class="chord-pool-input" value="${escapeAttr(scene.chordPoolText?.[layer.key]?.[partIndex] || formatChordPoolPart(scene[layer.key], partIndex))}" spellcheck="false" placeholder="Dm G C Am" />
               </span>
             </label>
             <label class="chord-inline-row"><span class="inline-label-icon" aria-hidden="true">${uiIcon("pattern")}</span><span class="sr-only">Pattern</span>
               <span class="bass-text-overlay-wrap">
                 <span class="chord-pattern-preview bass-text-preview" aria-hidden="true"></span>
-                <input class="chord-pattern-input" value="${escapeAttr(formatChordPatternPart(scene[layer.key], partIndex))}" spellcheck="false" placeholder="x--- ---- x--- ----" />
+                <input class="chord-pattern-input" value="${escapeAttr(scene.chordPatternText?.[layer.key]?.[partIndex] || formatChordPatternPart(scene[layer.key], partIndex))}" spellcheck="false" placeholder="x--- ---- x--- ----" />
               </span>
             </label>
           </section>
@@ -2493,6 +2511,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           const syncEditor = () => {
             updateChordEditorFromParts(el.chordGrid);
             setChordPoolText(scene, layerEl.dataset.chordLayer, partIndex, poolInput.value);
+            setChordPatternText(scene, layerEl.dataset.chordLayer, partIndex, patternInput.value);
             renderChordPoolPreview(poolPreview, poolInput.value, patternInput.value, stepOffset);
             refreshChordPattern();
             syncPreviewScroll();
@@ -2812,13 +2831,13 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
               <label class="chord-inline-row"><span class="inline-label-icon" aria-hidden="true">${uiIcon("notes")}</span><span class="sr-only">Chords</span>
                 <span class="bass-text-overlay-wrap">
                   <span class="chord-pool-preview bass-text-preview" aria-hidden="true"></span>
-                  <input class="chord-pool-input" value="${escapeAttr(formatChordPoolPart(scene[layer.key], partIndex))}" spellcheck="false" placeholder="Dm G C Am" />
+                <input class="chord-pool-input" value="${escapeAttr(scene.chordPoolText?.[layer.key]?.[partIndex] || formatChordPoolPart(scene[layer.key], partIndex))}" spellcheck="false" placeholder="Dm G C Am" />
                 </span>
               </label>
               <label class="chord-inline-row"><span class="inline-label-icon" aria-hidden="true">${uiIcon("pattern")}</span><span class="sr-only">Pattern</span>
                 <span class="bass-text-overlay-wrap">
                   <span class="chord-pattern-preview bass-text-preview" aria-hidden="true"></span>
-                  <input class="chord-pattern-input" value="${escapeAttr(formatChordPatternPart(scene[layer.key], partIndex))}" spellcheck="false" placeholder="x--- ---- x--- ----" />
+                <input class="chord-pattern-input" value="${escapeAttr(scene.chordPatternText?.[layer.key]?.[partIndex] || formatChordPatternPart(scene[layer.key], partIndex))}" spellcheck="false" placeholder="x--- ---- x--- ----" />
                 </span>
               </label>
             </section>
@@ -2839,6 +2858,8 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           const syncPreviewScroll = () => { poolPreview.scrollLeft = poolInput.scrollLeft; };
           const syncEditor = () => {
             updateChordEditorFromParts(fields);
+            setChordPoolText(scene, layerEl.dataset.chordLayer, partEl.dataset.chordEditorPart, poolInput.value);
+            setChordPatternText(scene, layerEl.dataset.chordLayer, partEl.dataset.chordEditorPart, patternInput.value);
             renderChordPoolPreview(poolPreview, poolInput.value, patternInput.value, stepOffset);
             refreshChordPattern();
             syncPreviewScroll();
