@@ -3589,12 +3589,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         const nextMode = normalizeUiMode(mode);
         if (state.uiMode === nextMode) return;
         state.uiMode = nextMode;
-        if (nextMode === "listen" && state.textMode) {
-          state.textMode = false;
-          localStorage.setItem("skanker-text-mode", "false");
-          document.body.classList.remove("mode-text");
-          el.textModeToggle.classList.remove("active");
-        }
+        document.body.classList.toggle("mode-text", state.textMode && nextMode === "edit");
         savePreset();
         renderShell();
         renderScenes();
@@ -3727,7 +3722,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
       el.textModeToggle.addEventListener("click", () => {
         state.textMode = !state.textMode;
         localStorage.setItem("skanker-text-mode", state.textMode);
-        document.body.classList.toggle("mode-text", state.textMode);
+        document.body.classList.toggle("mode-text", state.textMode && state.uiMode === "edit");
         el.textModeToggle.classList.toggle("active", state.textMode);
       });
       el.mixerOpen.addEventListener("click", openMixer);
