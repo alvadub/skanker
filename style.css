@@ -1324,6 +1324,7 @@
         font-family: "SFMono-Regular", Consolas, monospace;
         font-size: 0.76rem;
         text-align: right;
+        flex: 1;
       }
 
       .bass-editor-fields label {
