@@ -38,7 +38,7 @@ import { getInternalSynthParams, playInternalChord, playDrumInternal } from "./l
 import { createAudioGraph } from "./lib/audio-graph.js";
 import { getWebAudioFontPlayer, loadSoundProfile } from "./lib/audio-loader.js";
 import { AudioRuntime } from "./lib/audio-runtime.js";
-import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSymbolGroups, parseDrumPattern, formatDrumPattern, renderDrumPatternPreview, renderChordPatternPreview, renderChordPoolPreview, chordLayerPartValues, formatChordPatternPart, formatChordPoolPart, chordActivePoolIndex, parseChordPool, chordPatternToSlots, normalizeDubPatternSymbol, dubPatternChars, parseDubPatternCells, reconcilePastePattern, parseBassInlinePattern, parseChordInlinePattern, isDubPatternToken, normalizeChordPoolText, parseDubBassSymbols, dubSceneLabel, dubLineComment, dubMetaValue, dubMetaMap, formatDubChordLayer, formatDubBassPattern, orderedUnique, dubDrumTrackKey, soundLabel, drumSoundLabel, bassPresetLabel, summarizeChordLayer, summarizeDrumTrack, summarizeBassEvents, summarizeScene as summarizeSceneFn, parseDubChannelLine, parseDubArrangement, chordDubLineToSlots, drumDubLineToValues, bassDubLineToEvents, detectPasteFormat, chordPoolTextState, bassTextState, createBlankScene } from "./lib/ui-widgets.js";
+import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSymbolGroups, parseDrumPattern, formatDrumPattern, renderDrumPatternPreview, renderChordPatternPreview, renderChordPoolPreview, chordLayerPartValues, formatChordPatternPart, formatChordPoolPart, chordActivePoolIndex, parseChordPool, chordPatternToSlots, normalizeDubPatternSymbol, dubPatternChars, parseDubPatternCells, reconcilePastePattern, parseBassInlinePattern, parseChordInlinePattern, isDubPatternToken, normalizeChordPoolText, parseDubBassSymbols, dubSceneLabel, dubLineComment, dubMetaValue, dubMetaMap, formatDubChordLayer, formatDubBassPattern, orderedUnique, dubDrumTrackKey, soundLabel, drumSoundLabel, bassPresetLabel, summarizeChordLayer, summarizeDrumTrack, summarizeBassEvents, summarizeScene as summarizeSceneFn, parseDubChannelLine, parseDubArrangement, chordDubLineToSlots, drumDubLineToValues, bassDubLineToEvents, detectPasteFormat, chordPoolTextState, bassTextState, createBlankScene, normalizeChordCatalog, chordCatalogSignature, encodeChordCatalogPayload, decodeChordCatalogPayload } from "./lib/ui-widgets.js";
 
       const LOOP_STEPS = STEPS;
       const INITIAL_SCENE_COUNT = 4;
@@ -382,26 +382,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
             ? source[track.key]
             : fallback[track.key],
         ]));
-      }
-
-      function normalizeChordCatalog(rawCatalog, fallback = DEFAULT_CHORD_CATALOG) {
-        const source = rawCatalog && typeof rawCatalog === "object" ? rawCatalog : fallback;
-        return Object.fromEntries(Object.entries(source)
-          .map(([name, notes]) => [chordName(name), String(notes || "").trim()])
-          .filter(([name, notes]) => name && notes));
-      }
-
-      function chordCatalogSignature(rawCatalog) {
-        return JSON.stringify(Object.entries(normalizeChordCatalog(rawCatalog)).sort(([left], [right]) => left.localeCompare(right)));
-      }
-
-      function encodeChordCatalogPayload(rawCatalog) {
-        return utf8ToBase64Url(JSON.stringify(normalizeChordCatalog(rawCatalog)));
-      }
-
-      function decodeChordCatalogPayload(token) {
-        const parsed = JSON.parse(base64UrlToUtf8(token));
-        return normalizeChordCatalog(parsed);
       }
 
       async function ensureWebAudioFontPreset(sound) {
