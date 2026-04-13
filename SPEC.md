@@ -768,7 +768,22 @@ Instruments fall into two categories based on how they handle sustain:
 
 **Percussive instruments:** `x___` plays a note and lets it decay naturally. `-` mutes/cuts the sound early. Both types honor `_` vs `-` — the difference is whether the sound is actively sustained or naturally decaying.
 
-### 13.3 Bass pattern behavior (sustained)
+### 13.3 Input modes
+
+New instrument lanes choose between two input modes:
+
+| Mode | Input format | Pattern resolution | Examples |
+|------|--------------|-------------------|----------|
+| **Notes** | individual note names (`c2 g2 bb2`) | tick-level (128 ticks) | bass, synth leads, melodies |
+| **Chords** | chord symbols (`Am F G`) | step-level (32 steps) | rhythm, harmony, pads, guitar |
+
+**Notes mode:** Fine-grained control over individual pitches. Pattern operates at tick resolution for precise timing.
+
+**Chords mode:** Chord symbols resolved via harmonics library. Pattern operates at step resolution. Simpler input for harmonic content.
+
+This separation allows adding new instruments without changing the pattern system — just pick the right input mode and sustain type.
+
+### 13.4 Bass pattern behavior (sustained, notes mode)
 
 Bass patterns operate at tick resolution (128 ticks per loop, 4 ticks per step). The pattern controls:
 
@@ -785,7 +800,7 @@ Example: `x___ ---- x--- ----`
 
 The `formatBassPattern()` function generates patterns from bass events, including `_` for sustained ticks.
 
-### 13.4 Harmony pattern behavior (sustained)
+### 13.5 Harmony pattern behavior (sustained, chords mode)
 
 Harmony patterns operate at step resolution (32 steps per loop). The pattern controls:
 
@@ -802,7 +817,7 @@ Example: `x___ ---- x--- ----`
 
 **Key difference from old behavior:** Previously, harmony sustained automatically until the next chord or empty slot. Now, `_` explicitly controls sustain length, and `-` explicitly releases.
 
-### 13.5 Rhythm pattern behavior (percussive)
+### 13.6 Rhythm pattern behavior (percussive, chords mode)
 
 Rhythm patterns operate at step resolution. `_` lets notes ring, `-` mutes them.
 
@@ -814,7 +829,7 @@ Example: `x___ x--- x--- x---`
 
 For guitar/piano, this models palm muting vs open strumming. `-` cuts the decay short; `_` lets it ring.
 
-### 13.6 Implementation details
+### 13.7 Implementation details
 
 **Step resolver (`stepResolver` in `app.js`):**
 - Returns `null` for `-` → triggers `releaseHarmony()`
