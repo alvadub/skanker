@@ -258,10 +258,10 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           scene.rhythm[28] = "F7";
           scene.harmony[0] = "C";
           scene.harmony[16] = "F";
-          scene.drums.kick = [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0];
-          scene.drums.snare = [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0];
-          scene.drums.hihat = [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0];
-          scene.drums.openhat = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,1, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,1];
+          scene.drums.kick = parseDrumPattern("[xx]-- ---- [xx]-- ----") || [];
+          scene.drums.snare = parseDrumPattern("---- [xx]-- ---- [xx]--") || [];
+          scene.drums.hihat = parseDrumPattern("[x-x] [x-x] [x-x] [x-x]") || [];
+          scene.drums.openhat = parseDrumPattern("---- ---- ---- [xx]--") || [];
           scene.bass = [
             {tick: 0, midi: 36, length: 4},
             {tick: 4, midi: 36, length: 4},
@@ -285,6 +285,12 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         scene.bassText = {
           notes: "c2 c2 c2 c2 f2 g2 d2",
           pattern: "[xxxx]---- ---- ---- x___ ---- x--- ---- ---x ---- --x- ---- ---x ---- ---x ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ",
+        };
+        scene.drumPatternText = {
+          kick: "[xx]-- ---- [xx]-- ----",
+          snare: "---- [xx]-- ---- [xx]--",
+          hihat: "[x-x] [x-x] [x-x] [x-x]",
+          openhat: "---- ---- ---- [xx]--",
         };
 
         return scene;
@@ -3298,7 +3304,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
             <label class="drum-inline-row"><span class="inline-label-icon" aria-hidden="true">${uiIcon("pattern")}</span><span class="sr-only">${track.label} pattern</span>
               <span class="bass-text-overlay-wrap drum-pattern-overlay-wrap">
                 <span class="drum-pattern-preview bass-text-preview" aria-hidden="true"></span>
-                <input class="drum-pattern-input" value="${escapeAttr(formatDrumPattern(scene.drums[track.key]))}" aria-label="${track.label} text pattern" spellcheck="false" />
+                <input class="drum-pattern-input" value="${escapeAttr(scene.drumPatternText?.[track.key] || formatDrumPattern(scene.drums[track.key]))}" aria-label="${track.label} text pattern" spellcheck="false" />
               </span>
             </label>
           `;
