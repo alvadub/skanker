@@ -267,10 +267,12 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
             {tick: 4, midi: 36, length: 4},
             {tick: 8, midi: 36, length: 4},
             {tick: 12, midi: 36, length: 4},
-            {tick: 32, midi: 41, length: 16},
-            {tick: 64, midi: 43, length: 8},
-            {tick: 80, midi: 43, length: 8},
-            {tick: 96, midi: 38, length: 16},
+            {tick: 16, midi: 41, length: 4},
+            {tick: 32, midi: 43, length: 1},
+            {tick: 48, midi: 45, length: 1},
+            {tick: 64, midi: 38, length: 1},
+            {tick: 80, midi: 40, length: 1},
+            {tick: 96, midi: 36, length: 1},
           ];
         }
 
@@ -283,7 +285,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           harmony: ["x___ ____ [x_]__ ____", "x___ ____ x___ ____"],
         };
         scene.bassText = {
-          notes: "c2 c2 c2 c2 f2 g2 d2",
+          notes: "c2 c2 c2 c2 f2 g2 a2 d2 e2 c2",
           pattern: "[xxxx]---- ---- ---- x___ ---- x--- ---- ---x ---- --x- ---- ---x ---- ---x ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ",
         };
         scene.drumPatternText = {
