@@ -1420,6 +1420,10 @@
         flex: 1;
       }
 
+      .bass-editor-stats.invalid {
+        color: var(--danger);
+      }
+
       .bass-editor-fields label {
         display: grid;
         gap: 0.3rem;
@@ -1477,8 +1481,8 @@
       .bass-notes-input.invalid,
       .chord-pool-input.invalid,
       .chord-pattern-input.invalid {
-        border-color: var(--danger);
-        box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.16);
+        border: 0;
+        border-bottom: 1px solid var(--danger);
       }
 
       .bass-text-preview {
@@ -1496,6 +1500,11 @@
         user-select: none;
         white-space: pre;
         z-index: 1;
+      }
+
+      .bass-text-overlay-wrap:has(.bass-notes-input.invalid) .bass-text-preview,
+      .bass-text-overlay-wrap:has(.chord-pool-input.invalid) .bass-text-preview {
+        color: var(--danger);
       }
 
       .bass-text-preview span {
@@ -1525,6 +1534,11 @@
       .bass-text-preview span.on {
         color: var(--harmony);
         font-weight: 800;
+      }
+
+      .bass-text-overlay-wrap:has(.bass-notes-input.invalid) .bass-text-preview span.on,
+      .bass-text-overlay-wrap:has(.chord-pool-input.invalid) .bass-text-preview span.on {
+        color: var(--danger);
       }
 
       .bass-text-preview span.accent {

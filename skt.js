@@ -174,7 +174,12 @@ function formatBassPatternSymbols(symbols) {
 
 function formatBassPattern(events) {
   const symbols = Array(BASS_TICKS).fill("-");
-  normalizeBassEvents(events).forEach((e) => { symbols[e.tick] = "x"; });
+  normalizeBassEvents(events).forEach((e) => {
+    symbols[e.tick] = "x";
+    for (let i = 1; i < e.length && e.tick + i < BASS_TICKS; i++) {
+      symbols[e.tick + i] = "_";
+    }
+  });
   return formatBassPatternSymbols(symbols);
 }
 

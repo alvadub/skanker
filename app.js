@@ -259,10 +259,14 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           [8, 24].forEach((step) => scene.drums.snare[step] = 1);
           for (let step = 2; step < DRUM_STEPS; step += 4) scene.drums.hihat[step] = 1;
           [15, 31].forEach((step) => scene.drums.openhat[step] = 1);
-          const defaultBassPattern = "---- ---- ---- ---- ---- ---- ---- ---- x___ ---- x--- ---- ---x ---- --x- ---- ---x ---- ---x ---- ---x ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ";
-          const defaultBassNotes = "c2 c2 c2 e2 f2 f2 f2";
-          const bassEvents = bassPatternToEvents(defaultBassNotes, defaultBassPattern, 0, BASS_TICKS);
-          if (bassEvents) scene.bass = bassEvents;
+          scene.bass = [
+            {tick: 0, midi: 36, length: 8},
+            {tick: 16, midi: 36, length: 8},
+            {tick: 32, midi: 41, length: 16},
+            {tick: 64, midi: 43, length: 8},
+            {tick: 80, midi: 43, length: 8},
+            {tick: 96, midi: 38, length: 16},
+          ];
         }
 
         scene.chordPoolText = {
@@ -339,10 +343,19 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         const drumStep = stepIndex % DRUM_STEPS;
         const bassStep = stepIndex % STEPS;
         const rawChord = String(scene.harmony[stepIndex] || "").trim();
+        const harmonySymbol = getHarmonyPatternSymbol(stepIndex);
+        let harmony = null;
+        if (harmonySymbol === "x" || harmonySymbol === "X") {
+          harmony = rawChord || null;
+        } else if (harmonySymbol === "_") {
+          harmony = "_";
+        } else {
+          harmony = null;
+        }
 
         return {
           rhythm: scene.rhythm[stepIndex] ? [scene.rhythm[stepIndex]] : null,
-          harmony: rawChord || null,
+          harmony,
           drums: TRACKS.map((track) => ({
             trackKey: track.key,
             velocity: normalizeDrumValue(scene.drums?.[track.key]?.[drumStep] ?? 0),
@@ -637,18 +650,38 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         return ` · ${rhythmChord || "-"} | ${harmonyChord || "-"}`;
       }
 
+      let harmonyWasActive = false;
+
+      function getHarmonyPatternSymbol(step) {
+        const scene = currentScene();
+        const patternText = scene.chordPatternText?.harmony || [];
+        const fullPattern = patternText.join(" ");
+        const pattern = parseChordPattern(fullPattern, CHORD_STEPS);
+        if (!pattern || step >= pattern.length) return "-";
+        return pattern[step];
+      }
+
       function scheduleStep(step, time) {
         const scene = currentScene();
         const rhythmChord = scene.rhythm[step];
         const harmonyChord = scene.harmony[step];
-        const previousHarmonyChord = scene.harmony[(step - 1 + CHORD_STEPS) % CHORD_STEPS];
+        const harmonySymbol = getHarmonyPatternSymbol(step);
         const drumStep = step % DRUM_STEPS;
         const bassStep = step % STEPS;
         if (rhythmChord) playRhythm(rhythmChord, time);
-        const harmonyStarts = Boolean(harmonyChord) && String(harmonyChord).trim() !== String(previousHarmonyChord || "").trim();
-        const harmonyStops = !String(harmonyChord || "").trim() && String(previousHarmonyChord || "").trim();
-        if (harmonyStarts || (step === 0 && harmonyChord)) playHarmony(harmonyChord, time);
-        else if (harmonyStops || (step === 0 && !harmonyChord)) releaseHarmony(time);
+        if (harmonySymbol === "x" || harmonySymbol === "X") {
+          if (harmonyChord) playHarmony(harmonyChord, time);
+          harmonyWasActive = true;
+        } else if (harmonySymbol === "_") {
+          if (!harmonyWasActive && harmonyChord) {
+            playHarmony(harmonyChord, time);
+          }
+          // otherwise sustain - do nothing, let it ring
+          harmonyWasActive = true;
+        } else {
+          releaseHarmony(time);
+          harmonyWasActive = false;
+        }
         bassEventsForStep(scene, bassStep).forEach((event) => {
           const tickOffset = event.tick % BASS_TICKS_PER_STEP;
           const tickDuration = 60 / state.bpm / 4 / BASS_TICKS_PER_STEP;
@@ -723,6 +756,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         state.isPlaying = false;
         state.playhead = -1;
         state.pendingScene = null;
+        harmonyWasActive = false;
         updatePlayButtonIcon();
         if (render) renderAll();
       }
@@ -731,6 +765,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         if (audioRuntime) audioRuntime.stop();
         schedulerTimer = null;
         state.isPlaying = false;
+        harmonyWasActive = false;
         updatePlayButtonIcon();
         renderPlayhead();
         el.sceneStatus.innerHTML = currentSongSubtitle();
@@ -851,6 +886,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           : "";
         if (statsEl) {
           statsEl.textContent = `notes ${notes?.length ?? 0}/${stats.pulses} | pulses ${stats.pulses} | sustains ${stats.sustains} | rests ${stats.rests} | ticks ${stats.ticks}/${maxTicks}`;
+          statsEl.classList.toggle("invalid", invalidNotes);
         }
         return {
           events: invalidNotes || pattern === null ? null : bassPatternToEvents(notesInput.value, patternInput.value, Number(notesInput.dataset.tickOffset) || 0, maxTicks),
@@ -2032,6 +2068,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
         if (target === state.currentScene) return;
         state.currentScene = target;
         releaseHarmony(time);
+        harmonyWasActive = false;
         savePreset();
         renderAll();
       }
@@ -2566,6 +2603,9 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           shell.append(row, buildInlineChordEditorPart(scene, partIndex));
           el.chordGrid.append(shell);
         }
+        el.chordGrid.querySelectorAll("[data-chord-layer]").forEach((layerEl) => {
+          updateChordEditorLayerValidity(layerEl);
+        });
       }
 
       function buildInlineChordEditorPart(scene, partIndex) {
@@ -2617,6 +2657,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
             updateSlotsFromInputs();
             renderChordPoolPreview(poolPreview, poolInput.value, patternInput.value, stepOffset);
             refreshChordPattern();
+            updateChordEditorLayerValidity(layerEl);
             syncPreviewScroll();
           };
           const { refresh: refreshChordPattern } = bindPatternInput(patternInput, patternPreview, {
@@ -2904,6 +2945,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           : "";
         if (statsEl) {
           statsEl.textContent = `chords ${chords?.length ?? 0}/${stats.pulses} | pulses ${stats.pulses} | sustains ${stats.sustains} | rests ${stats.rests} | steps ${stats.steps}/${CHORD_EDITOR_PART_STEPS}`;
+          statsEl.classList.toggle("invalid", invalidPool);
         }
         return {
           layer: layerEl.dataset.chordLayer,
@@ -2995,6 +3037,7 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
             updateSlotsFromInputs();
             renderChordPoolPreview(poolPreview, poolInput.value, patternInput.value, stepOffset);
             refreshChordPattern();
+            updateChordEditorLayerValidity(layerEl);
             syncPreviewScroll();
           };
           const { refresh: refreshChordPattern } = bindPatternInput(patternInput, patternPreview, {
@@ -3131,11 +3174,27 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           const maxTicks = Number(notesInput.dataset.maxTicks) || BASS_TICKS;
           const notes = parseBassNotes(notesInput.value);
           const pattern = parseBassPattern(patternInput.value, maxTicks);
+          const patternStats = pattern ? bassPatternStats(pattern) : { pulses: 0, sustains: 0, rests: 0, ticks: 0 };
+          const invalidNotes = notes === null || (pattern !== null && notes.length !== patternStats.pulses);
           scene.bassText = {
             notes: notesInput.value,
             pattern: patternInput.value,
           };
-          if (notes && pattern && notes.length === bassPatternStats(pattern).pulses) {
+          notesInput.classList.toggle("invalid", invalidNotes);
+          notesInput.toggleAttribute("aria-invalid", invalidNotes);
+          patternInput.classList.toggle("invalid", pattern === null);
+          patternInput.toggleAttribute("aria-invalid", pattern === null);
+          notesInput.title = invalidNotes
+            ? `Enter exactly ${patternStats.pulses} note${patternStats.pulses === 1 ? "" : "s"} for this pattern. Each x starts a note; _ starts one only after silence.`
+            : "";
+          patternInput.title = pattern === null
+            ? `Use X, x, _, and - for up to ${maxTicks} fine pulses.`
+            : "";
+          if (stats) {
+            stats.textContent = `notes ${notes?.length ?? 0}/${patternStats.pulses} | pulses ${patternStats.pulses} | ticks ${patternStats.ticks}/${maxTicks}`;
+            stats.classList.toggle("invalid", invalidNotes);
+          }
+          if (notes && pattern && notes.length === patternStats.pulses) {
             const events = bassPatternToEvents(notesInput.value, patternInput.value, 0, maxTicks);
             if (events) {
               currentScene().bass = events;
