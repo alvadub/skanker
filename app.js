@@ -269,14 +269,6 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
             {tick: 80, midi: 43, length: 8},
             {tick: 96, midi: 38, length: 16},
           ];
-          scene.bassText = {
-            notes: "c2 c2 c2 c2 f2 g2 d2",
-            pattern: "[xxxx]---- ---- ---- x___ ---- x--- ---- ---x ---- --x- ---- ---x ---- ---x ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ",
-          };
-          scene.chordPatternText = {
-            rhythm: ["[x-x-]---- [x-x-]----", "[x-x-]---- [x-x-]----"],
-            harmony: ["x___ ____ [x_]__ ____", "x___ ____ ____ ____"],
-          };
         }
 
         scene.chordPoolText = {
@@ -284,10 +276,13 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           harmony: chordPoolTextState(scene.harmony, null, CHORD_EDITOR_PARTS, formatChordPoolPart, CHORD_EDITOR_PART_STEPS),
         };
         scene.chordPatternText = {
-          rhythm: chordPoolTextState(scene.rhythm, null, CHORD_EDITOR_PARTS, formatChordPatternPart, CHORD_EDITOR_PART_STEPS),
-          harmony: chordPoolTextState(scene.harmony, null, CHORD_EDITOR_PARTS, formatChordPatternPart, CHORD_EDITOR_PART_STEPS),
+          rhythm: ["[x-x-]---- [x-x-]----", "[x-x-]---- [x-x-]----"],
+          harmony: ["x___ ____ [x_]__ ____", "x___ ____ ____ ____"],
         };
-        scene.bassText = bassTextState(scene.bass, null, formatBassNotes, formatBassPattern);
+        scene.bassText = {
+          notes: "c2 c2 c2 c2 f2 g2 d2",
+          pattern: "[xxxx]---- ---- ---- x___ ---- x--- ---- ---x ---- --x- ---- ---x ---- ---x ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ",
+        };
 
         return scene;
       }
