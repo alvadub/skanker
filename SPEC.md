@@ -745,7 +745,7 @@ tests/
 
 ### 13.1 Pattern symbols
 
-Both bass and harmony use the same pattern syntax:
+All instruments use the same pattern syntax:
 
 | Symbol | Meaning |
 |--------|---------|
@@ -753,8 +753,22 @@ Both bass and harmony use the same pattern syntax:
 | `X` | accent (higher velocity) |
 | `_` | sustain (extend previous note/chord) |
 | `-` | rest (release/silence) |
+| `[xx]` | sub-step: multiple hits within one grid slot |
 
-### 13.2 Bass pattern behavior
+### 13.2 Instrument types
+
+Instruments fall into two categories based on how they handle sustain:
+
+| Type | Behavior | Examples |
+|------|----------|----------|
+| **Sustained** | `_` extends note, `-` releases | bass, pads, strings, organ, synth leads |
+| **Percussive** | `_` and `-` both = rest (no sustain) | drums, piano (rhythm), plucks |
+
+**Sustained instruments** honor the full pattern: `x___` plays a note that rings for 4 ticks/steps.
+
+**Percussive instruments** treat `_` as `-` — notes are one-shot and don't extend. The pattern still controls timing, but sustain is ignored.
+
+### 13.3 Bass pattern behavior (sustained)
 
 Bass patterns operate at tick resolution (128 ticks per loop, 4 ticks per step). The pattern controls:
 
@@ -771,7 +785,7 @@ Example: `x___ ---- x--- ----`
 
 The `formatBassPattern()` function generates patterns from bass events, including `_` for sustained ticks.
 
-### 13.3 Harmony pattern behavior
+### 13.4 Harmony pattern behavior (sustained)
 
 Harmony patterns operate at step resolution (32 steps per loop). The pattern controls:
 
@@ -788,7 +802,16 @@ Example: `x___ ---- x--- ----`
 
 **Key difference from old behavior:** Previously, harmony sustained automatically until the next chord or empty slot. Now, `_` explicitly controls sustain length, and `-` explicitly releases.
 
-### 13.4 Implementation details
+### 13.5 Rhythm pattern behavior (percussive)
+
+Rhythm patterns operate at step resolution. Notes are one-shot — `_` is treated as `-`.
+
+Example: `x--- x--- x--- x---`
+- Each `x` triggers a strum/pluck
+- Notes decay naturally (no explicit sustain)
+- Pattern controls timing only
+
+### 13.6 Implementation details
 
 **Step resolver (`stepResolver` in `app.js`):**
 - Returns `null` for `-` → triggers `releaseHarmony()`
