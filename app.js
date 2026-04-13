@@ -3310,11 +3310,17 @@ import { bindPatternInput, parseChordPattern, chordPatternStats, chordPatternSym
           `;
           const editor = document.createElement("div");
           editor.className = "drum-inline-editor";
+          const drumPatternText = scene.drumPatternText?.[track.key] || {
+            kick: "[xx]-- ---- [xx]-- ----",
+            snare: "---- [xx]-- ---- [xx]--",
+            hihat: "[x-x] [x-x] [x-x] [x-x]",
+            openhat: "---- ---- ---- [xx]--",
+          }[track.key] || formatDrumPattern(scene.drums[track.key]);
           editor.innerHTML = `
             <label class="drum-inline-row"><span class="inline-label-icon" aria-hidden="true">${uiIcon("pattern")}</span><span class="sr-only">${track.label} pattern</span>
               <span class="bass-text-overlay-wrap drum-pattern-overlay-wrap">
                 <span class="drum-pattern-preview bass-text-preview" aria-hidden="true"></span>
-                <input class="drum-pattern-input" value="${escapeAttr(scene.drumPatternText?.[track.key] || formatDrumPattern(scene.drums[track.key]))}" aria-label="${track.label} text pattern" spellcheck="false" />
+                <input class="drum-pattern-input" value="${escapeAttr(drumPatternText)}" aria-label="${track.label} text pattern" spellcheck="false" />
               </span>
             </label>
           `;
